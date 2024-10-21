@@ -1,9 +1,13 @@
 import ModernRobotics as MR
+from ModernRobotics import calculate_forward_kinematics
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Define your points in a NumPy array (shape: (n_points, 3))
-points = np.array([[0,0,0],[1,1,1],[2,2,2],[3,3,3],[4,4,4],[5,5,5]])
+points = calculate_forward_kinematics(inputs)
+
+
+
 
 # Split the points into x, y, and z coordinates
 x = points[:, 0]
