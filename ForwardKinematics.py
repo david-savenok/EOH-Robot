@@ -4,18 +4,20 @@ Created on Mon Oct 14 17:42:01 2024
 
 @author: apark
 """
-
+import config
 import numpy as np
 from sympy import *
+import scipy
 from scipy.linalg import expm
 from ModernRobotics import *
 
-lengths = (2, 6, 5, 4, 3, 2, 1)
-thetas = (0,0,0,0,0,0)
+lengths = config.LENGTHS
+thetas = config.ANGLES
+height = config.ANGLES
 
-def calculateForwardKinematics(lengths, thetas):
-    h, L1, L2, L3, L4, L5, L6 = lengths
-    theta1, theta2, theta3, theta4, theta5, theta6 = thetas
+def calculateForwardKinematics():
+    h, L1, L2, L3, L4, L5, L6 = config.LENGTHS
+    theta1, theta2, theta3, theta4, theta5, theta6 = config.ANGLES
     
     Mend = np.array([[1,0,0,L4+L6],[0,1,0,-(L1+L2+L3+L5)],[0,0,1,h],[0,0,0,1]])
     M2 = np.array([[1,0,0,0],[0,1,0,-(L1)],[0,0,1,h],[0,0,0,1]])
@@ -75,6 +77,11 @@ def calculateForwardKinematics(lengths, thetas):
     T05 = e1 @ e2 @ e3 @ e4 @ e5 @ M6
     T06 = e1 @ e2 @ e3 @ e4 @ e5 @ e6 @ Mend
     
-    return (T01, T02, T03, T04, T05, T06)
+    #calculate elbows:
+    elbow1 = np.array([0,0,0]) + np.array([0,0,height])
+    elbow2 = np.array([])
+    elbow3 = T02[0:4, 3]
+    
+    return (T01, T02, T03, T04, T05, T06, elbow1, elbow2, elbow3)
 
-print(calculateForwardKinematics(lengths, thetas))
+

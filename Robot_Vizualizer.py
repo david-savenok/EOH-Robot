@@ -1,18 +1,17 @@
-import ModernRobotics as MR
-from ModernRobotics import calculate_forward_kinematics
+from ForwardKinematics import calculateForwardKinematics
 import numpy as np
 import matplotlib.pyplot as plt
+import config
 
+#vars
+height = config.HEIGHT
 # Define your points in a NumPy array (shape: (n_points, 3))
-points = calculate_forward_kinematics(inputs)
-
-
-
+T01, T02, T03, T04, T05, T06 = calculateForwardKinematics()
 
 # Split the points into x, y, and z coordinates
-x = points[:, 0]
-y = points[:, 1]
-z = points[:, 2]
+x = np.array([0, 0, T01[0, 3], T02[0, 3], T03[0, 3], T04[0, 3], T05[0, 3], T06[0, 3]])
+y = np.array([0, 0, T01[1, 3], T02[1, 3], T03[1, 3], T04[1, 3], T05[1, 3], T06[1, 3]])
+z = np.array([0, height, T01[2, 3], T02[2, 3], T03[2, 3], T04[2, 3], T05[2, 3], T06[2, 3]])
 
 # Create a 3D plot
 fig = plt.figure()
