@@ -23,10 +23,10 @@ For EOH 2025 at UIUC, this project is to create a 6-axis robot arm.
 We intend for this project to be open for any ASME members after the funding date.
 
 ## Contacts
-Neil Maushard: Neiljm2@illinois.edu
-Christopher Egly: Cegly@illinois.edu
-Andrew Park: Ajpark6@illinois.edu
-Nicole Canfield: Nicole32@illinois.edu 
+Neil Maushard: Neiljm2@illinois.edu <br>
+Christopher Egly: Cegly@illinois.edu <br>
+Andrew Park: Ajpark6@illinois.edu <br>
+Nicole Canfield: Nicole32@illinois.edu <br>
 
 ### Installation
 - Steps on how to install this project, to use it.
