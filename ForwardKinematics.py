@@ -16,7 +16,7 @@ thetas = config.ANGLES
 height = config.ANGLES
 
 def calculateForwardKinematics():
-    h, L1, L2, L3, L4, L5, L6 = config.LENGTHS
+    h, L1, L2, L3, L4, L5, L6, elbow1Mag, elbow2Mag, elbow3Mag = config.LENGTHS
     theta1, theta2, theta3, theta4, theta5, theta6 = config.ANGLES
     
     Mend = np.array([[1,0,0,L4+L6],[0,1,0,-(L1+L2+L3+L5)],[0,0,1,h],[0,0,0,1]])
@@ -70,18 +70,18 @@ def calculateForwardKinematics():
     e5 = expm(Sb5*theta5)
     e6 = expm(Sb6*theta6)
     
-    T01 = e1 @ M2
-    T02 = e1 @ e2 @ M3
-    T03 = e1 @ e2 @ e3 @ M4
-    T04 = e1 @ e2 @ e3 @ e4 @ M5
-    T05 = e1 @ e2 @ e3 @ e4 @ e5 @ M6
-    T06 = e1 @ e2 @ e3 @ e4 @ e5 @ e6 @ Mend
+    T02 = e1 @ M2
+    T03 = e1 @ e2 @ M3
+    T04 = e1 @ e2 @ e3 @ M4
+    T05 = e1 @ e2 @ e3 @ e4 @ M5
+    T06 = e1 @ e2 @ e3 @ e4 @ e5 @ M6
+    T07 = e1 @ e2 @ e3 @ e4 @ e5 @ e6 @ Mend
     
     #calculate elbows:
-    elbow1 = np.array([0,0,0]) + np.array([0,0,height])
-    elbow2 = np.array([])
-    elbow3 = T02[0:4, 3]
-    
-    return (T01, T02, T03, T04, T05, T06, elbow1, elbow2, elbow3)
-
+    elbow1 = np.array([0,0,0]) + np.array([0, 0, h])
+    elbow2 = T02[0:3, 3] + elbow2Mag*(se3ToVec(T02)[3:]/np.linalg.norm(se3ToVec(T02)[3:]))
+    elbow3 = T03[0:3, 3]#elbow3 is calculated by T03 for simplicity, T03 has an offset
+    new_T03 = T03[0:3, 3] + (-elbow3Mag*(se3ToVec(T03)[3:]/np.linalg.norm(se3ToVec(T03)[3:])))
+    print(se3ToVec(T02))
+    return (T02[0:3, 3], new_T03, T04[0:3, 3], T05[0:3, 3], T06[0:3, 3], T07[0:3, 3], elbow1, elbow2, elbow3)
 

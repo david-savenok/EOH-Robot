@@ -6,12 +6,12 @@ import config
 #vars
 height = config.HEIGHT
 # Define your points in a NumPy array (shape: (n_points, 3))
-T01, T02, T03, T04, T05, T06 = calculateForwardKinematics()
+pos2, pos3, pos4, pos5, pos6, pos7, elbow1, elbow2, elbow3 = calculateForwardKinematics()
 
 # Split the points into x, y, and z coordinates
-x = np.array([0, 0, T01[0, 3], T02[0, 3], T03[0, 3], T04[0, 3], T05[0, 3], T06[0, 3]])
-y = np.array([0, 0, T01[1, 3], T02[1, 3], T03[1, 3], T04[1, 3], T05[1, 3], T06[1, 3]])
-z = np.array([0, height, T01[2, 3], T02[2, 3], T03[2, 3], T04[2, 3], T05[2, 3], T06[2, 3]])
+x = np.array([0, elbow1[0], pos2[0], elbow2[0], pos3[0], elbow3[0], pos4[0], pos5[0], pos6[0], pos7[0]])
+y = np.array([0, elbow1[1], pos2[1], elbow2[1], pos3[1], elbow3[1], pos4[1], pos5[1], pos6[1], pos7[1]])
+z = np.array([0, elbow1[2], pos2[2], elbow2[2], pos3[2], elbow3[2], pos4[2], pos5[2], pos6[2], pos7[2]])
 
 # Create a 3D plot
 fig = plt.figure()
