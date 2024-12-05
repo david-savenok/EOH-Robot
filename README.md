@@ -27,6 +27,7 @@ Neil Maushard: Neiljm2@illinois.edu <br>
 Christopher Egly: Cegly@illinois.edu <br>
 Andrew Park: Ajpark6@illinois.edu <br>
 Nicole Canfield: Nicole32@illinois.edu <br>
+David Savenok: dsave2@illinois.edu <br>
 
 ### Installation
 - Steps on how to install this project, to use it.
@@ -37,14 +38,8 @@ $ add installations steps if you have to.
 ```
 
 ### Pre-Requisites
-List all the pre-requisites the system needs to develop this project.
-- A tool
-- B tool
 
 ### Development Environment
-Write about setting up the working environment for your project.
-- How to download the project...
-- How to install dependencies...
 
 ## Usage
 
@@ -63,13 +58,10 @@ Write about setting up the working environment for your project.
 ### Branches
 
 ### Guideline
-coding guidelines or other things you want people to follow should follow.
 
 ##  Resources
-Add important resources here
 
 ## Credit/Acknowledgment
-Credit the authors here.
 
 ## Demo
 
