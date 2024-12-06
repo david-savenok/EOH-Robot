@@ -4,9 +4,9 @@ print("started")
 #weight : .6400, 1.160, 1.500, 1.800, 2.430, 2.670, 2.646, 3.340, 3.780, 7.937
 t1max = 6.269*12 #10 best
 t2max, M2 = 2.213*12, 3.780 #9 best
-t3max, M3 = 0.3098*12, .6400 #1 best
+t3max, M3 = .5163*12, 1.160 #1 best
 t4max, M4 = 0.3098*12, 0.64 #1 best
-M5 = 0.12 #theoretical dynamixel ax-12a
+M5 = 0.24 #theoretical dynamixel ax-12a
 tmax = np.array([t1max,t2max,t3max,t4max])
 P = 0
 bestLengths = np.array([0,0,0,0,0])
@@ -36,7 +36,7 @@ for l1 in np.arange(0, 6.1, 0.1):
                         t = np.array([t1,t2,t3,t4])
                         
                         #check remaining available torque
-                        remainingTorque = np.array([t1max-t1,t2max-t2,t3max-t3,t4max-t4])
+                        remainingTorque = np.array([(t1max-t1)/t1max,(t2max-t2)/t2max,(t3max-t3)/t3max,(t4max-t4)/t4max])
                         if np.any(remainingTorque<=0):
                             #print("nope")
                             break
@@ -51,9 +51,9 @@ for l1 in np.arange(0, 6.1, 0.1):
                             bestTorqueSet = remainingTorque    
                             strugglingMotor = index
                             #print("torque updated")     
-print(bestTorque/12, "- Worst Torque Final")
+print("PREPAYLOAD: \n\nWorst Torque Final: ", bestTorque*100, )
 print("best lengths: ", bestLengths)
-print("best torques: ", bestTorqueSet/12)
+print("best torques: ", (bestTorqueSet)*100)
 print(counter, " combinations checked")
 
 
@@ -69,13 +69,14 @@ while np.all((bestTorqueSet>=0)):
     bestTorqueSet = np.array([t1max-t1,t2max-t2,t3max-t3,t4max-t4])
     maxPayLoad += 0.01
 
-print("max payload: ", round((maxPayLoad-0.02), 4))
+print("WITH PAYLOAD: \n\nmax payload: ", round((maxPayLoad-0.02), 4))
 P = maxPayLoad - 0.02
 t1 = (M2*l2)+((M3+M4)*(l2+l3))+((M5+P)*(l2+l3+l5))
 t2 = ((M3+M4)*l3)+((M5+P)*(l3+l5))
 t3 = (M5+P)*l5
 t4 = P*l6
 t = np.array([t1,t2,t3,t4])
-bestTorqueSet = np.array([t1max-t1,t2max-t2,t3max-t3,t4max-t4])/12
-print("torque left: ", bestTorqueSet)
-print("strugling motor: ",np.argmin(bestTorqueSet)+1)
+bestTorqueSet = np.array([t1max-t1,t2max-t2,t3max-t3,t4max-t4])
+print("torque left: ", bestTorqueSet/12)
+print("percentages: ", (bestTorqueSet/tmax)*100)
+print("struggling motor: ",np.argmin(bestTorqueSet)+1)
