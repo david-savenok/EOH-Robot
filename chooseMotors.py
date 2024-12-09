@@ -7,6 +7,7 @@ torques = [0.3098, 0.5163, 0.93, 0.9588, 1.4751, 1.6226, 1.7701, 1.8439, 2.2127,
 weights = [0.64, 1.16, 1.5, 1.68, 2.43, 2.67, 2.64555, 3.34, 3.78, 7.93664, 0.02866, 0.4875, 0.4544, 0.4631, 0.4606, 0.3638] #lb
 costs = [8.00, 19.00, 26.00, 20.00, 25.00, 26.00, 26.00, 37.00, 40.00, 58.00, 8.75, 15, 15, 15, 15, 15.7] #USD
 motors = pd.DataFrame({'Name': names, 'Torque': torques, 'Weight': weights, 'Cost': costs})
+
 #Sorting the dataframe by motor weight in decreasing order (i.e. heaviest motor is first)
 sortedMotors = motors.sort_values(by='Weight', ascending=False)
 print(sortedMotors)

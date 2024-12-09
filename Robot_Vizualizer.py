@@ -2,7 +2,7 @@ from ForwardKinematics import calculateForwardKinematics
 import numpy as np
 import matplotlib.pyplot as plt
 import config
-
+from sympy import *
 #vars
 height = config.HEIGHT
 # Define your points in a NumPy array (shape: (n_points, 3))
