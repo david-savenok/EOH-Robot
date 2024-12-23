@@ -69,7 +69,7 @@ def find_lengths(tmax, masses, density):
                             #Pre-Payload:
                             bestTorque = minRemaining
                             bestTorques = remainingTorque
-                            strugglingMotor = np.argmin(remainingTorquePercentage)+1
+                            strugglingMotor = np.argmin(remainingTorquePercentage)+2
                             #Post-Payload:
                             bestMaxPayload, loadedRemainingTorques, failingMotor = find_max_payload(bestLengths, masses, tmax, density) 
                     elif method == 2:                        
@@ -79,7 +79,7 @@ def find_lengths(tmax, masses, density):
                             #Pre-Payload:
                             bestTorque = np.min(remainingTorquePercentage) #%
                             bestTorques = remainingTorque #in lb
-                            strugglingMotor = np.argmin(remainingTorquePercentage)+1 #index This could also be struggling by percentage if changed
+                            strugglingMotor = np.argmin(remainingTorquePercentage)+2 #index This could also be struggling by percentage if changed
                             #Post-Payload:
                             bestMaxPayload, loadedRemainingTorques, failingMotor = find_max_payload(bestLengths, masses, tmax, density) #lbs, in lb, index
                         
@@ -113,7 +113,7 @@ def calc_torques(lengths, masses, payload, density):
     t = np.array([t1,t2,t3,t4])
     return t
 
-tmax, masses = set_motors(1, 2, 10, 16, 16, sortedMotors)
+tmax, masses = set_motors(1, 6, 10, 16, 16, sortedMotors)
 bestLengths, bestTorque, bestTorqueSet, strugglingMotor, bestMaxPayload, loadedRemainingTorques, failingMotor = find_lengths(tmax, masses, density)
 
 print("PREPAYLOAD: \nWorst Torque Final (%): ", bestTorque*100)
