@@ -7,6 +7,7 @@ torques = [0.3098, 0.5163, 0.93, 0.9588, 1.4751, 1.6226, 1.7701, 1.8439, 2.2127,
 weights = [0.64, 1.16, 1.5, 1.68, 2.43, 2.67, 2.64555, 3.34, 3.78, 7.93664, 0.02866, 0.4875, 0.4544, 0.4631, 0.4606, 0.3638] #lb
 costs = [8.00, 19.00, 26.00, 20.00, 25.00, 26.00, 26.00, 37.00, 40.00, 58.00, 8.75, 15, 15, 15, 15, 15.7] #USD
 motors = pd.DataFrame({'Name': names, 'Torque': torques, 'Weight': weights, 'Cost': costs})
+density = 0.4/12 #lbs per inch of 80X20
 
 #Sorting the dataframe by motor weight in decreasing order (i.e. heaviest motor is first)
 sortedMotors = motors.sort_values(by='Weight', ascending=False)
@@ -100,13 +101,14 @@ def find_max_payload(lengths, masses, tmax):
     failingMotor = np.argmin(remainingTorque)+1
     return maxPayload, remainingTorque, failingMotor
 
-def calc_torques(lengths, masses, payload):
+def calc_torques(lengths, masses, payload, density):
+    d = density
     M2, M3, M4, M5 = masses
     l1, l2, l3, l5, l6 = lengths
     P = payload
-    t1 = (M2*l2)+((M3+M4)*(l2+l3))+((M5+P)*(l2+l3+l5))
-    t2 = ((M3+M4)*l3)+((M5+P)*(l3+l5))
-    t3 = (M5+P)*l5
+    t1 = (M2*l2)+((M3+M4)*(l2+l3))+((M5+P)*(l2+l3+l5))+(d*l2*(l2/2))+(d*(l3)*(l2+(l3)/2))+(d*4*(l2+l3))+(d*l5*(l2+l3+(l5/2))) #IF L4 CHANGES, CHANGE THIS
+    t2 = ((M3+M4)*l3)+((M5+P)*(l3+l5))+(d*l3*(l3/2))+(d*4*l3)+(d*l5*(l3+(l5/2)))
+    t3 = ((M5+P)*l5)+(d*l5*(l5/2))
     t4 = P*l6
     t = np.array([t1,t2,t3,t4])
     return t
