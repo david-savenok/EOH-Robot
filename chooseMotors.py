@@ -12,11 +12,11 @@ motors = pd.DataFrame({'Name': names, 'Torque': torques, 'Weight': weights, 'Cos
 sortedMotors = motors.sort_values(by='Weight', ascending=False)
 print(sortedMotors)
 #Selecting motors for simulation. Intakes motors from global list and outputs masses and max torques
-def set_motors(m1, m2, m3, m4, m5, motorDataframe):
-    t1max, t2max, t3max, t4max = motorDataframe['Torque'].iat[m1]*12, motorDataframe['Torque'].iat[m2]*12, motorDataframe['Torque'].iat[m3]*12, motorDataframe['Torque'].iat[m4]*12 #lb in
-    M1, M2, M3, M4, M5 = motorDataframe['Weight'].iat[m1], motorDataframe['Weight'].iat[m2], motorDataframe['Weight'].iat[m3], motorDataframe['Weight'].iat[m4], motorDataframe['Weight'].iat[m5] #lb
-    tmax = np.array([t1max,t2max,t3max,t4max])
-    masses = [M2, M3, M4, M5]
+def set_motors(m2, m3, m4, m5, m6, motorDataframe):
+    t2max, t3max, t4max, t5max = motorDataframe['Torque'].iat[m2]*12, motorDataframe['Torque'].iat[m3]*12, motorDataframe['Torque'].iat[m4]*12, motorDataframe['Torque'].iat[m5]*12 #lb in
+    M2, M3, M4, M5, M6 = motorDataframe['Weight'].iat[m2], motorDataframe['Weight'].iat[m3], motorDataframe['Weight'].iat[m4], motorDataframe['Weight'].iat[m5], motorDataframe['Weight'].iat[m6] #lb
+    tmax = np.array([t2max,t3max,t4max,t5max])
+    masses = [M3, M4, M5, M6]
     return tmax, masses
 
 #Intakes max torques and masses initialized by set_motors, and outputs best lengths for the set, as well as max payload and other information
@@ -86,12 +86,12 @@ def find_max_payload(lengths, masses, tmax, step):
 
 #Intakes lengths, masses, and payload of a configuration and outputs current torques used in the motors
 def calc_torques(lengths, masses, payload):
-    M2, M3, M4, M5 = masses
+    M3, M4, M5, M6 = masses
     l1, l2, l3, l5, l6 = lengths
     P = payload
-    t1 = (M2*l2)+((M3+M4)*(l2+l3))+((M5+P)*(l2+l3+l5))
-    t2 = ((M3+M4)*l3)+((M5+P)*(l3+l5))
-    t3 = (M5+P)*l5
+    t1 = (M3*l2)+((M4+M5)*(l2+l3))+((M6+P)*(l2+l3+l5))
+    t2 = ((M5+M4)*l3)+((M6+P)*(l3+l5))
+    t3 = (M6+P)*l5
     t4 = P*l6
     t = np.array([t1,t2,t3,t4])
     return t
