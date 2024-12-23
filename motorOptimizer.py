@@ -13,19 +13,19 @@ density = 0.4/12 #lbs per inch of 80X20
 sortedMotors = motors.sort_values(by='Weight', ascending=False)
 print(sortedMotors)
 #Selecting motors for simulation. Intakes motors from global list and outputs masses and max torques
-def set_motors(m1, m2, m3, m4, m5, motorDataframe):
-    m1 -= 1
+def set_motors(m2, m3, m4, m5, m6, motorDataframe):
     m2 -= 1
     m3 -= 1
     m4 -= 1
     m5 -= 1
-    t1max, t2max, t3max, t4max = motorDataframe['Torque'].iat[m1]*12, motorDataframe['Torque'].iat[m2]*12, motorDataframe['Torque'].iat[m3]*12, motorDataframe['Torque'].iat[m4]*12 #lb in
-    M1, M2, M3, M4, M5 = motorDataframe['Weight'].iat[m1], motorDataframe['Weight'].iat[m2], motorDataframe['Weight'].iat[m3], motorDataframe['Weight'].iat[m4], motorDataframe['Weight'].iat[m5] #lb
-    tmax = np.array([t1max,t2max,t3max,t4max])
-    masses = [M2, M3, M4, M5]
+    m6 -= 1
+    t2max, t3max, t4max, t5max = motorDataframe['Torque'].iat[m2]*12, motorDataframe['Torque'].iat[m3]*12, motorDataframe['Torque'].iat[m4]*12, motorDataframe['Torque'].iat[m5]*12 #lb in
+    M2, M3, M4, M5, M6 = motorDataframe['Weight'].iat[m2], motorDataframe['Weight'].iat[m3], motorDataframe['Weight'].iat[m4], motorDataframe['Weight'].iat[m5], motorDataframe['Weight'].iat[m6] #lb
+    tmax = np.array([t2max,t3max,t4max, t5max,])
+    masses = [M3, M4, M5, M6]
     return tmax, masses
 
-def find_lengths(tmax, masses):
+def find_lengths(tmax, masses, density):
     #Determines how to calculate the best motor set
     method = int(input("Calculation method: (1) Torque percentage (2) Max Payload: "))
     while (method != 1) and (method != 2):
@@ -52,7 +52,7 @@ def find_lengths(tmax, masses):
                         print("looped 10mil")
                     #calculate torques
                     lengths = [l1, l2, l3, l5, l6]
-                    t = calc_torques(lengths, masses, 0) #This is in lb in
+                    t = calc_torques(lengths, masses, 0, density) #This is in lb in
                     #Check remaining available torque
                     remainingTorque = tmax-t
                     remainingTorquePercentage = remainingTorque/tmax
@@ -71,9 +71,9 @@ def find_lengths(tmax, masses):
                             bestTorques = remainingTorque
                             strugglingMotor = np.argmin(remainingTorquePercentage)+1
                             #Post-Payload:
-                            bestMaxPayload, loadedRemainingTorques, failingMotor = find_max_payload(bestLengths, masses, tmax) 
+                            bestMaxPayload, loadedRemainingTorques, failingMotor = find_max_payload(bestLengths, masses, tmax, density) 
                     elif method == 2:                        
-                        if find_max_payload(lengths, masses, tmax)[0]>bestMaxPayload:
+                        if find_max_payload(lengths, masses, tmax, density)[0]>bestMaxPayload:
                             #Total:
                             bestLengths = lengths #in
                             #Pre-Payload:
@@ -81,40 +81,40 @@ def find_lengths(tmax, masses):
                             bestTorques = remainingTorque #in lb
                             strugglingMotor = np.argmin(remainingTorquePercentage)+1 #index This could also be struggling by percentage if changed
                             #Post-Payload:
-                            bestMaxPayload, loadedRemainingTorques, failingMotor = find_max_payload(bestLengths, masses, tmax) #lbs, in lb, index
+                            bestMaxPayload, loadedRemainingTorques, failingMotor = find_max_payload(bestLengths, masses, tmax, density) #lbs, in lb, index
                         
     print(counter, " combinations checked")
     return bestLengths, bestTorque, bestTorques, strugglingMotor, bestMaxPayload, loadedRemainingTorques, failingMotor
 
-def find_max_payload(lengths, masses, tmax):
+def find_max_payload(lengths, masses, tmax, density):
     l1, l2, l3, l5, l6 = lengths
     maxPayload = 0.0
-    bestTorqueSet = tmax - calc_torques(lengths, masses, maxPayload)
+    bestTorqueSet = tmax - calc_torques(lengths, masses, maxPayload, density)
     while np.all((bestTorqueSet>=0)):
-        t = calc_torques(lengths, masses, maxPayload)
+        t = calc_torques(lengths, masses, maxPayload, density)
         bestTorqueSet = tmax - t
         maxPayload += 0.01
     
     maxPayload -= 0.02 #Technically its -0.01 but it causes a computational error leading to negative loaded torques
-    tFinal = calc_torques(lengths, masses, maxPayload)
+    tFinal = calc_torques(lengths, masses, maxPayload, density)
     remainingTorque = tmax - tFinal
     failingMotor = np.argmin(remainingTorque)+1
     return maxPayload, remainingTorque, failingMotor
 
 def calc_torques(lengths, masses, payload, density):
     d = density
-    M2, M3, M4, M5 = masses
+    M3, M4, M5, M6 = masses
     l1, l2, l3, l5, l6 = lengths
     P = payload
-    t1 = (M2*l2)+((M3+M4)*(l2+l3))+((M5+P)*(l2+l3+l5))+(d*l2*(l2/2))+(d*(l3)*(l2+(l3)/2))+(d*4*(l2+l3))+(d*l5*(l2+l3+(l5/2))) #IF L4 CHANGES, CHANGE THIS
-    t2 = ((M3+M4)*l3)+((M5+P)*(l3+l5))+(d*l3*(l3/2))+(d*4*l3)+(d*l5*(l3+(l5/2)))
-    t3 = ((M5+P)*l5)+(d*l5*(l5/2))
+    t1 = (M3*l2)+((M5+M4)*(l2+l3))+((M6+P)*(l2+l3+l5))+(d*l2*(l2/2))+(d*(l3)*(l2+(l3)/2))+(d*4*(l2+l3))+(d*l5*(l2+l3+(l5/2))) #IF L4 CHANGES, CHANGE THIS
+    t2 = ((M5+M4)*l3)+((M6+P)*(l3+l5))+(d*l3*(l3/2))+(d*4*l3)+(d*l5*(l3+(l5/2)))
+    t3 = ((M6+P)*l5)+(d*l5*(l5/2))
     t4 = P*l6
     t = np.array([t1,t2,t3,t4])
     return t
 
 tmax, masses = set_motors(1, 2, 10, 16, 16, sortedMotors)
-bestLengths, bestTorque, bestTorqueSet, strugglingMotor, bestMaxPayload, loadedRemainingTorques, failingMotor = find_lengths(tmax, masses)
+bestLengths, bestTorque, bestTorqueSet, strugglingMotor, bestMaxPayload, loadedRemainingTorques, failingMotor = find_lengths(tmax, masses, density)
 
 print("PREPAYLOAD: \nWorst Torque Final (%): ", bestTorque*100)
 print("Best Lengths (in): ", [float(x) for x in bestLengths])
