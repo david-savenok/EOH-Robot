@@ -98,7 +98,7 @@ def find_max_payload(lengths, masses, tmax, density):
     maxPayload -= 0.02 #Technically its -0.01 but it causes a computational error leading to negative loaded torques
     tFinal = calc_torques(lengths, masses, maxPayload, density)
     remainingTorque = tmax - tFinal
-    failingMotor = np.argmin(remainingTorque)+1
+    failingMotor = np.argmin(remainingTorque)+2
     return maxPayload, remainingTorque, failingMotor
 
 def calc_torques(lengths, masses, payload, density):
