@@ -1,24 +1,25 @@
 import numpy as np
 import pandas as pd
 
+#MOTORS OF INTEREST
+MOTORS_OF_INTEREST = (1, 1, 14, 9, 9)
 #Defining the motors, torques, weights, and costs in corresponding arrays, then assigning them to an overarching dataframe
-names = ["Twotrees Nema 17", "SOULUCK Nema 23 A", "STEPPERONLINE CNC Nema 23", "SOULUCK Nema 23 B", "SOULUCK Nema 23 C", "SOULUCK Nema 23 D", "STEPPERONLINE Nema 23", "SOULUCK Nema 23 E", "SOULUCK Nema 23 F", "HobbyUnlimited Nema 34", "FILFEEL Micro Gearmotor", "Greartisan 12V DC Motor 100RPM", "Greartisan 12V DC Motor 120RPM", "Greartisan 12V DC Motor 200RPM", "Greartisan 12V DC Motor 60RPM", "Fafeicy 12V DC Motor"]
-torques = [0.3098, 0.5163, 0.93, 0.9588, 1.4751, 1.6226, 1.7701, 1.8439, 2.2127, 6.2693, 0.1627, 0.2604, 0.4701, 0.1591, 0.4701, 0.405] #ft lb
-weights = [0.64, 1.16, 1.5, 1.68, 2.43, 2.67, 2.64555, 3.34, 3.78, 7.93664, 0.02866, 0.4875, 0.4544, 0.4631, 0.4606, 0.3638] #lb
-costs = [8.00, 19.00, 26.00, 20.00, 25.00, 26.00, 26.00, 37.00, 40.00, 58.00, 8.75, 15, 15, 15, 15, 15.7] #USD
+names = ["Twotrees Nema 17", "Twotrees Nema17 w20:1 gearing", "SOULUCK Nema 23 A", "STEPPERONLINE CNC Nema 23", "SOULUCK Nema 23 B", "SOULUCK Nema 23 C", "SOULUCK Nema 23 D", "STEPPERONLINE Nema 23", "SOULUCK Nema 23 E", "SOULUCK Nema 23 F", "HobbyUnlimited Nema 34", "FILFEEL Micro Gearmotor", "Greartisan 12V DC Motor 100RPM", "Greartisan 12V DC Motor 120RPM", "Greartisan 12V DC Motor 200RPM", "Greartisan 12V DC Motor 60RPM", "Fafeicy 12V DC Motor", "Greartsian 12V 30 RPM"]
+torques = [0.3098, (0.3098*20) ,0.5163, 0.93, 0.9588, 1.4751, 1.6226, 1.7701, 1.8439, 2.2127, 6.2693, 0.1627, 0.2604, 0.4701, 0.1591, 0.4701, 0.405, 0.867961662145188] #ft lb
+weights = [0.64, (0.64+0.71), 1.16, 1.5, 1.68, 2.43, 2.67, 2.64555, 3.34, 3.78, 7.93664, 0.02866, 0.4875, 0.4544, 0.4631, 0.4606, 0.3638, 0.675] #lb
+costs = [8.00, 32.34, 19.00, 26.00, 20.00, 25.00, 26.00, 26.00, 37.00, 40.00, 58.00, 8.75, 15, 15, 15, 15, 15.7, 14.99] #USD
 motors = pd.DataFrame({'Name': names, 'Torque': torques, 'Weight': weights, 'Cost': costs})
+
 density = 0.4/12 #lbs per inch of 80X20
 
-#Sorting the dataframe by motor weight in decreasing order (i.e. heaviest motor is first)
-sortedMotors = motors.sort_values(by='Weight', ascending=False)
+#Sorting the dataframe by motor Torque in decreasing order (i.e. highest Torque is first)
+sortedMotors = motors.sort_values(by='Torque', ascending=False).reset_index(drop=True)
+sortedMotors.index.name = 'Index'
 print(sortedMotors)
+
 #Selecting motors for simulation. Intakes motors from global list and outputs masses and max torques
-def set_motors(m2, m3, m4, m5, m6, motorDataframe):
-    m2 -= 1
-    m3 -= 1
-    m4 -= 1
-    m5 -= 1
-    m6 -= 1
+def set_motors(MOTORS_OF_INTEREST, motorDataframe):
+    m2, m3, m4, m5, m6 = MOTORS_OF_INTEREST
     t2max, t3max, t4max, t5max = motorDataframe['Torque'].iat[m2]*12, motorDataframe['Torque'].iat[m3]*12, motorDataframe['Torque'].iat[m4]*12, motorDataframe['Torque'].iat[m5]*12 #lb in
     M2, M3, M4, M5, M6 = motorDataframe['Weight'].iat[m2], motorDataframe['Weight'].iat[m3], motorDataframe['Weight'].iat[m4], motorDataframe['Weight'].iat[m5], motorDataframe['Weight'].iat[m6] #lb
     tmax = np.array([t2max,t3max,t4max, t5max,])
@@ -113,16 +114,43 @@ def calc_torques(lengths, masses, payload, density):
     t = np.array([t1,t2,t3,t4])
     return t
 
-tmax, masses = set_motors(1, 6, 10, 16, 16, sortedMotors)
+
+#HERE WE INPUT THE TUPLE OF MOTORS WE ARE INTERESTED IN
+tmax, masses = set_motors(MOTORS_OF_INTEREST, sortedMotors)
 bestLengths, bestTorque, bestTorqueSet, strugglingMotor, bestMaxPayload, loadedRemainingTorques, failingMotor = find_lengths(tmax, masses, density)
 
-print("PREPAYLOAD: \nWorst Torque Final (%): ", bestTorque*100)
-print("Best Lengths (in): ", [float(x) for x in bestLengths])
-print("Best Torques (ft lb): ", bestTorqueSet/12)
-print("Best Torques (%): ", 100*bestTorqueSet/tmax)
+print("PREPAYLOAD: \nWorst Torque (%): ", bestTorque*100)#WORST torque from the BEST set of lengths
+printedMotorNumber = ["#2", "#3", "#4", "#5"]
+linkageNumber = ["1st","2nd","3rd","4th","5th"]
+
+result = ""
+for name, item in zip(linkageNumber, bestLengths):
+    result += f"{name} length: {item:.2f}, "
+print("Best Lengths (in): ", result)
+
+result = ""
+for name, item in zip(printedMotorNumber, bestTorqueSet/12):
+    result += f"{name} torque: {item:.2f}, "
+print("Best Torques (ft lb): ", result)
+    
+result = ""
+for name, item in zip(printedMotorNumber, 100*bestTorqueSet/tmax):
+    result += f"{name} torque: {item:.2f}%, "
+print("Best Torques (%): ", result)
+
+
 print("Struggling Motor: ", strugglingMotor)
 print("\n\n")
 print("WITH PAYLOAD: \nMax Payload: ", round((bestMaxPayload), 4))
-print("Max-loaded Torque (ft lb): ", loadedRemainingTorques/12)
-print("Max-loaded Torque (%): ", (loadedRemainingTorques/tmax)*100)
+
+result = ""
+for name, item in zip(printedMotorNumber, loadedRemainingTorques/12):
+    result += f"{name} torque: {item:.6f}, "
+print("Leftover Torque (lb*ft): ", result)
+
+result = ""
+for name, item in zip(printedMotorNumber, (loadedRemainingTorques/tmax)*100):
+    result += f"{name} torque: {item:.2f}%, "
+print("Leftover Torque (%): ", result)
+
 print("Failed Motor: ",failingMotor)
