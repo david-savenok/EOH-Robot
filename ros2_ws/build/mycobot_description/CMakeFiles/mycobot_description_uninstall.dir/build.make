@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/david/ros2_ws/src/mycobot_ros2/mycobot_description
+CMAKE_SOURCE_DIR = /home/david/repos/EOH-Robot-1/ros2_ws/src/mycobot_ros2/mycobot_description
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/david/ros2_ws/build/mycobot_description
+CMAKE_BINARY_DIR = /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_description
 
 # Utility rule file for mycobot_description_uninstall.
 
@@ -67,7 +67,7 @@ include CMakeFiles/mycobot_description_uninstall.dir/compiler_depend.make
 include CMakeFiles/mycobot_description_uninstall.dir/progress.make
 
 CMakeFiles/mycobot_description_uninstall:
-	/usr/bin/cmake -P /home/david/ros2_ws/build/mycobot_description/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
+	/usr/bin/cmake -P /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_description/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
 
 mycobot_description_uninstall: CMakeFiles/mycobot_description_uninstall
 mycobot_description_uninstall: CMakeFiles/mycobot_description_uninstall.dir/build.make
@@ -82,6 +82,6 @@ CMakeFiles/mycobot_description_uninstall.dir/clean:
 .PHONY : CMakeFiles/mycobot_description_uninstall.dir/clean
 
 CMakeFiles/mycobot_description_uninstall.dir/depend:
-	cd /home/david/ros2_ws/build/mycobot_description && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/david/ros2_ws/src/mycobot_ros2/mycobot_description /home/david/ros2_ws/src/mycobot_ros2/mycobot_description /home/david/ros2_ws/build/mycobot_description /home/david/ros2_ws/build/mycobot_description /home/david/ros2_ws/build/mycobot_description/CMakeFiles/mycobot_description_uninstall.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_description && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/david/repos/EOH-Robot-1/ros2_ws/src/mycobot_ros2/mycobot_description /home/david/repos/EOH-Robot-1/ros2_ws/src/mycobot_ros2/mycobot_description /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_description /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_description /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_description/CMakeFiles/mycobot_description_uninstall.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/mycobot_description_uninstall.dir/depend
 

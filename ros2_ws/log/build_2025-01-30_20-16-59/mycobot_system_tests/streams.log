@@ -1,0 +1,42 @@
+[0.007s] Invoking command in '/home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/david/repos/EOH-Robot-1/ros2_ws/src/mycobot_ros2/mycobot_system_tests -DCMAKE_INSTALL_PREFIX=/home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests
+[0.057s] -- The C compiler identification is GNU 13.3.0
+[0.202s] -- The CXX compiler identification is GNU 13.3.0
+[0.224s] -- Detecting C compiler ABI info
+[0.366s] -- Detecting C compiler ABI info - done
+[0.400s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.400s] -- Detecting C compile features
+[0.402s] -- Detecting C compile features - done
+[0.419s] -- Detecting CXX compiler ABI info
+[0.684s] -- Detecting CXX compiler ABI info - done
+[0.736s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.737s] -- Detecting CXX compile features
+[0.740s] -- Detecting CXX compile features - done
+[0.766s] -- Found ament_cmake: 2.5.2 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.289s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.563s] -- Found ament_lint_auto: 0.17.1 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+[1.802s] -- Added test 'lint_cmake' to check CMake code style
+[1.805s] -- Added test 'xmllint' to check XML markup files
+[1.811s] -- Configuring done (1.8s)
+[1.812s] -- Generating done (0.0s)
+[1.816s] -- Build files have been written to: /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests
+[1.817s] Invoked command in '/home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/david/repos/EOH-Robot-1/ros2_ws/src/mycobot_ros2/mycobot_system_tests -DCMAKE_INSTALL_PREFIX=/home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests
+[1.819s] Invoking command in '/home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests -- -j2 -l2
+[1.890s] Invoked command in '/home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests -- -j2 -l2
+[1.892s] Invoking command in '/home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests
+[1.905s] -- Install configuration: ""
+[1.906s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/ament_index/resource_index/package_run_dependencies/mycobot_system_tests
+[1.908s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/ament_index/resource_index/parent_prefix_path/mycobot_system_tests
+[1.908s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/environment/ament_prefix_path.sh
+[1.908s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/environment/ament_prefix_path.dsv
+[1.908s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/environment/path.sh
+[1.908s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/environment/path.dsv
+[1.908s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/local_setup.bash
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/local_setup.sh
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/local_setup.zsh
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/local_setup.dsv
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/package.dsv
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/ament_index/resource_index/packages/mycobot_system_tests
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/cmake/mycobot_system_testsConfig.cmake
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/cmake/mycobot_system_testsConfig-version.cmake
+[1.909s] -- Installing: /home/david/repos/EOH-Robot-1/ros2_ws/install/mycobot_system_tests/share/mycobot_system_tests/package.xml
+[1.909s] Invoked command in '/home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/david/repos/EOH-Robot-1/ros2_ws/build/mycobot_system_tests
