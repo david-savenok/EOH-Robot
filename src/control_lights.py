@@ -21,10 +21,13 @@ try:
     
     #ser.flush()
     user_input = input()
-    ser.write(light_painting.call_test().encode())
+    #//ser.write(light_painting.call_test().encode())
+    ser.write(bytes("/S*H/M*1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0/", "utf-8"))
     #ser.write(bytes("hello penis", "utf-8"))
     #ser.write(b'r')
     #ser.flush()
+    #time.sleep(1)
+    #ser.write(b"Q")
     
     """
     # Main loop for user input
@@ -37,6 +40,7 @@ try:
         else:
             print("Invalid input, please type 'g' or 'r'")
     """
+    
     
     time.sleep(1)
 
