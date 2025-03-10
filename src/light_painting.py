@@ -48,12 +48,12 @@ def generate_contours(image):
     filtered_contours = [cnt for cnt in simplified_contours if cv2.contourArea(cnt) > min_contour_area]
     image_with_contours = src.copy()
 
-    cv2.imshow("Source", src)
-    cv2.drawContours(image_with_contours, filtered_contours, -1, (0, 255, 0), 2) 
-    cv2.imshow("Original Image with Contours", image_with_contours)
-    cv2.imshow("Canny edges", edges)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.imshow("Source", src)
+    #cv2.drawContours(image_with_contours, filtered_contours, -1, (0, 255, 0), 2) 
+    #cv2.imshow("Original Image with Contours", image_with_contours)
+    #cv2.imshow("Canny edges", edges)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     
     return filtered_contours
 
@@ -93,6 +93,7 @@ def i2space(image_point, image):
         z = -real_height*(iy/dims[1]) + (height + 9)*(dims[0]/dims[1])
     return [float(x), float(y), float(z)]
 
+
 image_file = r"src/testImage2.jpeg"
 max_height = 1024
 max_width = 1024
@@ -113,7 +114,7 @@ ax.set_xlabel("y")
 ax.set_ylabel("z")
 ax.set_aspect('equal')
 ax.grid(True) 
-plt.show()
+#plt.show()
 
 #Turn these into T vectors
 transformation_matrix_set = []
@@ -200,5 +201,8 @@ def create_command(theta_list_set):
             command = command [:-1]
             command += "*"
     return command
-    
-print(create_command(theta_list_set))
+
+def call_test():
+    return create_command(theta_list_set)
+
+
