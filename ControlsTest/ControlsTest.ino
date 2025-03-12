@@ -6,11 +6,10 @@
 bool motor1Running = false;  // State to track HIGH/LOW for step pulse
 bool motor2Running = false;
 
-int theta1 = 4320; //degrees
-int theta2 = 1800; //degrees
+int theta1 = 1800; //degrees
+int theta2 = 18; //degrees
 
 const unsigned long clockFreq = 16000000; //Hz
-int prescale = 1;
 
 int steps1;
 int steps2;
@@ -18,7 +17,7 @@ int steps2;
 int count1 = 0;
 int count2 = 0;
 
-int calcOCRA(float freq){
+int calcOCRA(float freq, int prescale){
   float OCRA = ((clockFreq/(freq*prescale)) - 1);
   if(OCRA > 65535){
     OCRA = 65535;
@@ -48,14 +47,13 @@ void setup() {
   
   // Set Timer1 in CTC (Clear Timer on Compare Match) mode
   TCCR1B |= (1 << WGM12);  // CTC Mode
-  TCCR1B |= (1 << CS10);   // Prescaler = 1 (16 MHz timer frequency)
+  TCCR1B |= (1 << CS10) | (1 << CS11);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   steps1 = int(theta1/1.8);
   float freq1 = 1000; //Hz
-  
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR1A = calcOCRA(freq1);
-  OCR1B = 15999;
+  OCR1A = calcOCRA(freq1, 32);
+  OCR1B = 499;
   // Enable Timer1 Compare Match A and B interrupts
   TIMSK1 |= (1 << OCIE1A) | (1<< OCIE1B);
   
@@ -65,14 +63,15 @@ void setup() {
   
   // Set Timer3 in CTC (Clear Timer on Compare Match) mode
   TCCR3B |= (1 << WGM32);  // CTC Mode
-  TCCR3B |= (1 << CS31);   // Prescaler = 8 (2 MHz timer frequency)
+  TCCR3B |= (1<<CS30) | (1 << CS31);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   steps2 = int(theta2/1.8);
   float timescale = steps1*(1.0/freq1);
   float freq2 = steps2/timescale;
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR3A = calcOCRA(freq2);  // 500 µs HIGH
-  OCR3B = 15999;
+  
+  OCR3A = calcOCRA(freq2, 32);  // 500 µs HIGH
+  OCR3B = 499;
   // Enable Timer3 Compare Match A and B interrupts
   TIMSK3 |= (1 << OCIE3A) | (1<< OCIE3B);
   // Enable global interrupts

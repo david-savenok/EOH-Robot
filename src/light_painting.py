@@ -80,7 +80,7 @@ def resize_image(image, max_width, max_height):
 
 def i2space(image_point, image):
     dims = image.shape
-    x = 5
+    x = 5 #in
     ix = image_point[0]
     iy = image_point[1]
     real_height = 10
@@ -204,5 +204,3 @@ def create_command(theta_list_set):
 
 def call_test():
     return create_command(theta_list_set)
-
-
