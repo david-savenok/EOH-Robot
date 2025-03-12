@@ -1,8 +1,10 @@
 from ModernRobotics import *
+from kin_planning import IKin
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import config
+
 
 lengths = config.LENGTHS
 home_position = config.ANGLES
@@ -117,50 +119,13 @@ ax.grid(True)
 #plt.show()
 
 #Turn these into T vectors
-transformation_matrix_set = []
-for set in point_set_set_3D:
-    transformation_matrix_set.append([VecTose3(np.array([1, 0, 0, point[0], point[1], point[2]])) for point in set])
-
-h, L1, elbow2Mag, L2, elbow3Mag, L3, L4, L5, L6= lengths
-
-M = np.array([[1,0,0,L4+L6],[0,1,0,-(L1+L2+L3+L5)],[0,0,1,h],[0,0,0,1]])
-
-w1 = np.array([0,0,1])
-w2 = np.array([1,0,0])
-w3 = np.array([-1,0,0])
-w4 = np.array([1,0,0])
-w5 = np.array([0,-1,0])
-w6 = np.array([1,0,0])
-
-q1 = np.array([0,0,0])
-q2 = np.array([0,-L1,h])
-q3 = np.array([0,-L1-L2,h])
-q4 = np.array([0,-(L1+L2+L3),h])
-q5 = np.array([L4,-(L1+L2+L3),h])
-q6 = np.array([L4,-(L1+L2+L3+L5),h])
-
-v1 = np.cross(q1,w1)
-v2 = np.cross(q2,w2)
-v3 = np.cross(q3,w3)
-v4 = np.cross(q4,w4)
-v5 = np.cross(q5,w5)
-v6 = np.cross(q6,w6)
-
-S1 = np.concatenate((w1, v1))
-S2 = np.concatenate((w2, v2))
-S3 = np.concatenate((w3, v3))
-S4 = np.concatenate((w4, v4))
-S5 = np.concatenate((w5, v5))
-S6 = np.concatenate((w6, v6))
-
-S = np.array([S1, S2, S3, S4, S5, S6]).T
-
 theta_list_set = []
 true_list_set = []
-for set in transformation_matrix_set:
-    results = [IKinSpace(S, M, T, np.array([0, 0, 0, 0, 0, 0]), 0.02, 0.01) for T in set]
-    theta_list_set.append([i[0] for i in results])
-    true_list_set.append([i[1] for i in results])
+results = []
+for set in point_set_set_3D:
+    results.append([IKin(np.array([1, 0, 0, point[0], point[1], point[2]])) for point in set])
+    theta_list_set.append([i[0][0] for i in results])
+    true_list_set.append([i[0][1] for i in results])
 
 IKerrors = 0
 for i in true_list_set:
@@ -204,3 +169,4 @@ def create_command(theta_list_set):
 
 def call_test():
     return create_command(theta_list_set)
+print(call_test())
