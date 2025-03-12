@@ -1,4 +1,3 @@
-from ModernRobotics import *
 from kin_planning import IKin
 import numpy as np
 import cv2
