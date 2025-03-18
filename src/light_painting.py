@@ -3,11 +3,11 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import config
+from scipy.optimize import least_squares
 
 
-lengths = config.LENGTHS
+h, L1, offset1, L2, offset2, L3, offset3, L4, offset4, L5, offset5, L6 = config.LENGTHS
 home_position = config.ANGLES
-height = lengths[0]
 
 def generate_contours(image):
     """Gets contours from the given image
@@ -81,21 +81,72 @@ def resize_image(image, max_width, max_height):
 
 def i2space(image_point, image):
     dims = image.shape
-    x = 5 #in
     ix = image_point[0]
     iy = image_point[1]
     real_height = 10
     real_width = 10
     if dims[0] >= dims[1]:
-        y = real_width*(ix/dims[0]) - 6*(dims[1]/dims[0])
-        z = -real_height*(iy/dims[0]) + height + 13
+        x = real_width*(ix/dims[0]) + (L1+6)*(dims[1]/dims[0])
+        z = -real_height*(iy/dims[0]) + h + 12
     else:
-        y = real_width*(ix/dims[1]) - 6
-        z = -real_height*(iy/dims[1]) + (height + 9)*(dims[0]/dims[1])
-    return [float(x), float(y), float(z)]
+        x = real_width*(ix/dims[1]) + L1+6
+        z = -real_height*(iy/dims[1]) + (h + 9)*(dims[0]/dims[1])
+    return [float(x), float(z)]
+
+def lightPaintingIK(x,z, guess):
+    bounds = [(-3*np.pi/4,np.pi/4), (-3*np.pi/4, 3*np.pi/4), (-2*np.pi, 2*np.pi)]
+    
+    def func(thetas):
+        theta2, theta3, theta4 = thetas
+        x_guess = L1+(L2*np.cos(-theta2))+L3*(np.cos(-theta2+theta3))+(L5+offset4)*(np.cos(-theta2+theta3-theta4))
+        z_guess = h+L2*np.sin(-theta2)+L3*np.sin(-theta2+theta3)+(L5+offset4)*np.sin(-theta2+theta3-theta4)
+        return np.array([x_guess - x, z_guess - z, 0])
+    """
+    def jacobian(thetas):
+        theta2, theta3, theta4 = thetas
+        xx = L2*np.sin(-theta2)+L3*np.sin(-theta2+theta3)+(L5+offset4)*np.sin(-theta2+theta3-theta4)
+        xy = -L3*np.sin(-theta2+theta3)-(L5+offset4)*np.sin(-theta2+theta3-theta4)
+        xz = (L5+offset4)*np.sin(-theta2+theta3-theta4)
+        yx = -L2*np.cos(-theta2)-L3*np.cos(-theta2+theta3)-(L5+offset4)*np.cos(-theta2+theta3-theta4)
+        yy = L3*np.cos(-theta2+theta3)+(L5+offset4)*np.cos(-theta2+theta3-theta4)
+        yz = -(L5+offset4)*np.cos(-theta2+theta3-theta4)
+        print(xx, xy, xz, yx, yy, yz)
+        return np.array([[xx, xy, xz],[yx, yy, yz]])
+    
+    def bounded_root_finding(guess, bounds, tol=0.01, max_iter=100):
+        
+        Newton-Raphson root-finding for theta2-4 with bounds
+        - guess: Starting point (x0,y0,z0)
+        - bounds: [(theta2min, theta2max),(theta3min, theta3max),(theta4min, theta4max)]
+        
+        thetas = np.array(guess, dtype=float)
+        for _ in range(max_iter):
+            F = func(thetas)
+            J = jacobian(thetas)
+
+            delta_theta, _, _, _ = np.linalg.lstsq(J, -F, rcond=None)
+
+            alpha = 1.0
+            new_thetas = thetas + alpha*delta_theta
+            for i in range(3):
+                min_b, max_b = bounds[i]
+                if new_thetas[i] < min_b or new_thetas[i] > max_b:
+                    alpha = min(alpha, (max_b - thetas[i]) / delta_theta[i] if delta_theta[i] > 0 else (min_b - thetas[i]) / delta_theta[i])
+            
+            thetas += alpha*delta_theta
+
+            if np.linalg.norm(F) < tol:
+                return thetas
+        print("Max iterations reached without convergence")
+        return None"
+    """
+    def residual(thetas):
+        return func(thetas)
+    result = least_squares(residual, guess, bounds=np.array(bounds).T)
+    return result.x
 
 
-image_file = r"src/testImage2.jpeg"
+image_file = r"src/testImage3.jpeg"
 max_height = 1024
 max_width = 1024
 image = cv2.imread(image_file)
@@ -109,26 +160,31 @@ for contour in contours:
 fig, ax = plt.subplots(figsize=(8, 6))
 for set in point_set_set_3D:
     set = np.array(set)
-    ax.plot(set[:, 1], set[:, 2])
+    ax.plot(set[:, 0], set[:, 1])
 ax.set_title("Penis Drawing")
-ax.set_xlabel("y")
+ax.set_xlabel("x")
 ax.set_ylabel("z")
 ax.set_aspect('equal')
 ax.grid(True) 
-#plt.show()
+plt.show()
 
 #Turn these into T vectors
 theta_list_set = []
 true_list_set = []
 results = []
+last = [-np.pi/2,-np.pi/2,np.pi/2]
 for set in point_set_set_3D:
-    results.append([IKin(np.array([1, 0, 0, point[0], point[1], point[2]])) for point in set])
-    theta_list_set.append([i[0][0] for i in results])
-    true_list_set.append([i[0][1] for i in results])
+    temp=[]
+    for point in set:
+        theta = lightPaintingIK(point[0], point[1], np.array(last))
+        temp.append([0,theta[0], theta[1], theta[2], 0, 0])
+        last = theta
+    theta_list_set.append(temp)
 
 IKerrors = 0
 for i in true_list_set:
     IKerrors += (len(i) - np.count_nonzero(i))
+#print(IKerrors)
 
 def create_command(theta_list_set):
     command = "/S*H*"
@@ -145,10 +201,10 @@ def create_command(theta_list_set):
     
     for i in range(len(contour_commands)):
         contour_command = contour_commands[i]
-        command += "/M*TIMESCALE,"
+        command += "/M*"
         command += contour_command
         if i < len(theta_firsts)-1:
-            command += "*/L*0*/M*TIMESCALE,"
+            command += "*/L*0*/M*"
             for theta in theta_lasts[i]:
                 command += str(round(theta, 2))
                 command += ","
@@ -169,3 +225,4 @@ def create_command(theta_list_set):
 def call_test():
     return create_command(theta_list_set)
 print(call_test())
+#print(call_test())
