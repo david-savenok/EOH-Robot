@@ -1,8 +1,8 @@
 #include <math.h>
-#define IN3 10
-#define IN4 11
-#define pwmPin2 9
-#define encPin6 A1
+#define IN1 7
+#define IN2 6
+#define pwmPin 3
+#define encPin A2
 
 const float loopTime = 10; // every X ms, the code enters update_speed()
 float currRPM = 0; // current speed
@@ -10,8 +10,8 @@ float currPos = 360;
 float refPos = 360;
 int dir = 1;
 int currPWM = 100; // current++ PWM output
-int timePassed = 0;
-unsigned long prevMillis = 0; // last time (ms) the code entered update_speed()
+int timePassed1 = 0;
+unsigned long prevMillis1 = 0; // last time (ms) the code entered update_speed()
 
 int timePassed2 = 0;
 unsigned long prevMillis2 = 0; // last time (ms) the code entered update_speed()
@@ -21,44 +21,40 @@ int toc = 10;
 int tic = 10;
 
 float error = 0;
-float Ki = 3.8;
+float Ki = 50;
 
 char comma = ',';
 
 void setup()
 {
-  pinMode(encPin6, INPUT);
-  pinMode(pwmPin2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-
+  pinMode(encPin, INPUT);
+  pinMode(pwmPin, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
   Serial.begin(500000);
 }
 void loop()
 {
   timePassed2 = millis() - prevMillis2;
-  if(timePassed2 >= loopTime/20)
-  {
+  if(timePassed2 >= loopTime){
     update_pos();
-
     prevMillis2 = millis();
   }
   
-  
-  timePassed = millis() - prevMillis;
-  if(timePassed >= loopTime/2)
+  timePassed1 = millis() - prevMillis1;
+  if(timePassed1 >= loopTime)
   {
     update_error();
-    print_motor_info();
+    //print_motor_info();
     //reset cnt and time
-    prevMillis = millis();
+    prevMillis1 = millis();
   }
 }
 void print_motor_info()
 {
   //print reference RPM and current RPM+
-  Serial.println("currPos refPos error currPWM");
-  Serial.println(String(currPos) + " " + String(refPos) + " " + String(error)+ " " + String(currPWM));
+  Serial.println("Calc_RPM currPos refPos error");
+  Serial.println(String(currRPM)+" "+String(currPos) + " " + String(refPos) + " " + String(error) + " " +String(toc-tic) +" " +String(refTime));
 }
 
 void update_pos()
@@ -74,60 +70,51 @@ void update_pos()
       int time = (input.substring(commaLoc+1)).toInt();
       //Serial.println(String(time));
     }
-    
 
-    if (abs(position) > 0)
+    if (position > 0)
     {
-      refPos += position;
-      if (refPos > 360) refPos -= 360;
-      if (refPos < 0) refPos += 360;
+      refPos = position;
     }
     if (commaLoc != -1 && time > 0)
     {
       refTime = time;
     }
   }
+  
 }
 
 void update_error()
 {
   currPos =  readAngle();
-  
+  currRPM = (currPos/loopTime/360.0) * dir;
+
   //error = refRPM - currRPM; //velocity
   error = refPos-currPos; //position
   if (error > 180) error -= 360;  // Ensure shortest path
   if (error < -180) error += 360;
-  
   if (abs(error) < 5) {
-    analogWrite(IN3, 1);
-    analogWrite(IN4, 1);
+    digitalWrite(IN1, 1);
+    digitalWrite(IN2, 1);
     currPWM = 0;
-    return;   
+    return;
   }
 
   tic = millis();
-
   currPWM = Ki*error;
-  if (abs(error) < 25){
-    currPWM += (error/(abs(error)))*17;
-  }
   //Serial.println(String(currPWM));
   if (currPWM >= 255) {currPWM = 255;}
   if (currPWM <= -255) {currPWM = -255;}
-
-
   if (currPWM <= 0) {
-    digitalWrite(IN3, 1);
-    digitalWrite(IN4, 0);
-    analogWrite(pwmPin2,abs(currPWM));
+    digitalWrite(IN1, 1);
+    digitalWrite(IN2, 0);
+    analogWrite(pwmPin,abs(currPWM));
     dir = -1;
   } else {
-    digitalWrite(IN3, 0);
-    digitalWrite(IN4, 1);
-    analogWrite(pwmPin2,abs(currPWM));
+    digitalWrite(IN1, 0);
+    digitalWrite(IN2, 1);
+    analogWrite(pwmPin,abs(currPWM));
     dir = 1;
   }
-
   toc = millis();
   //currPWM = constrain(currPWM * Ki*error, 0, 255); // make sure this stays between 0 and 255
   //analogWrite(pwmPin, currPWM);
@@ -135,6 +122,6 @@ void update_error()
   
 }
 float readAngle(){
-  int raw_value = analogRead(encPin6);
+  int raw_value = analogRead(encPin);
   return (raw_value/1023.0)*(5/3.3)*(360.0);  // Convert to degrees
 }
