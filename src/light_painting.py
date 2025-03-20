@@ -166,7 +166,7 @@ ax.set_xlabel("x")
 ax.set_ylabel("z")
 ax.set_aspect('equal')
 ax.grid(True) 
-plt.show()
+#plt.show()
 
 #Turn these into T vectors
 theta_list_set = []
@@ -223,6 +223,6 @@ def create_command(theta_list_set):
     return command
 
 def call_test():
-    return create_command(theta_list_set)
-print(call_test())
+    return create_command(theta_list_set) + '/'
+#print(call_test())
 #print(call_test())
