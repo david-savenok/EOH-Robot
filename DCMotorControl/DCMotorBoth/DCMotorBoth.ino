@@ -2,45 +2,45 @@
 #define IN1 7
 #define IN2 6
 #define pwmPin1 3
-#define encPin1 A2
+#define encPin5 A2
 #define IN3 10
 #define IN4 11
 #define pwmPin2 9
-#define encPin2 A1
+#define encPin6 A1
 
 const float loopTime = 10; // every X ms, the code enters update_speed()
 int timePassed = 0;
 unsigned long prevMillis = 0; // last time (ms) the code entered update_speed()
 
-float currPos1 = 360;
-float desPos1 = 0;
-int dir1 = 1;
-int currPWM1 = 100; // current++ PWM output
+float currPos5 = 360;
+float desPos5 = 0;
+int dir5 = 1;
+int currPWM5 = 100; // current++ PWM output
 
-float currPos2 = 0;
-float desPos2 = 0;
-int dir2 = 1;
-int currPWM2 = 100; // current++ PWM output
+float currPos6 = 0;
+float desPos6 = 0;
+int dir6 = 1;
+int currPWM6 = 100; // current++ PWM output
 
 int toc = 10;
 int tic = 10;
 
-float error1 = 0;
-float error2 = 0;
+float error5 = 0;
+float error6 = 0;
 
-float Ki1 = 25;
-float Ki2 = 3.8;
+float Ki5 = 25;
+float Ki6 = 3.8;
 
 char comma = ',';
 
 void setup()
 {
-  pinMode(encPin1, INPUT);
+  pinMode(encPin5, INPUT);
   pinMode(pwmPin1, OUTPUT);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
 
-  pinMode(encPin2, INPUT);
+  pinMode(encPin6, INPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
   pinMode(pwmPin2, OUTPUT);
@@ -60,8 +60,8 @@ void loop()
 void print_motor_info(){
   //print current position, desired position, error, and pwm value
   Serial.println("currPos desPos error pwm");
-  Serial.println(String(currPos1) + " " + String(desPos1) + " " + String(error1) + " " + String(currPWM1));
-  Serial.println(String(currPos2) + " " + String(desPos2) + " " + String(error2) + " " + String (currPWM2));
+  Serial.println(String(currPos5) + " " + String(desPos5) + " " + String(error5) + " " + String(currPWM5));
+  Serial.println(String(currPos6) + " " + String(desPos6) + " " + String(error6) + " " + String (currPWM6));
 }
 
 void update_pos(){
@@ -76,12 +76,12 @@ void update_pos(){
       position2 = (input.substring(commaLoc1+1, commaLoc2)).toInt();
     }
 
-    desPos1 = float(position1);
-    while (desPos1 > 360) {desPos1 -= 360;}
-    while (desPos1 < 0) {desPos1 += 360;}
-    desPos2 = float(position2);
-    while (desPos2 > 360) {desPos2 -= 360;}
-    while (desPos2 < 0) {desPos2 += 360;}
+    desPos5 = float(position1);
+    while (desPos5 > 360) {desPos5 -= 360;}
+    while (desPos5 < 0) {desPos5 += 360;}
+    desPos6 = float(position2);
+    while (desPos6 > 360) {desPos6 -= 360;}
+    while (desPos6 < 0) {desPos6 += 360;}
   }
 }
 
@@ -89,65 +89,65 @@ void update_error()
 {
   tic = millis();
 
-  readAngle(currPos1, currPos2);
+  readAngleDC(currPos5, currPos6);
 
   bool motor5Running = true; //End conditions
   bool motor6Running = true;
-  error1 = refPos-currPos; //position error
-  if (error1 > 180) error1 -= 360;  // Ensure shortest path
-  if (error1 < -180) error1 += 360;
+  error5 = refPos-currPos; //position error
+  if (error5 > 180) error5 -= 360;  // Ensure shortest path
+  if (error5 < -180) error5 += 360;
   
-  error2 = refPos2-currPos2; //position error
-  if (error2 > 180) error2 -= 360;  // Ensure shortest path
-  if (error2 < -180) error2 += 360;
+  error6 = refPos2-currPos6; //position error
+  if (error6 > 180) error6 -= 360;  // Ensure shortest path
+  if (error6 < -180) error6 += 360;
 
   //End conditions
-  if (abs(error1) < 5) {
+  if (abs(error5) < 5) {
     digitalWrite(IN1, 1);
     digitalWrite(IN2, 1);
-    currPWM1 = 0;
+    currPWM5 = 0;
     motor5Running = false;
   }
-  if (abs(error2) < 10) {
+  if (abs(error6) < 10) {
     digitalWrite(IN3, 1);
     digitalWrite(IN4, 1);
-    currPWM2 = 0;
+    currPWM6 = 0;
     motor6Running = false;
   }
   
   //Only adjust motor 5 if it hasn't hit the target yet
   if(motor5Running){
-    currPWM1 = Ki1*error1;
-    if (currPWM1 >= 255) {currPWM1 = 255;}
-    if (currPWM1 <= -255) {currPWM1 = -255;}
-    if (currPWM1 <= 0) {
+    currPWM5 = Ki5*error5;
+    if (currPWM5 >= 255) {currPWM5 = 255;}
+    if (currPWM5 <= -255) {currPWM5 = -255;}
+    if (currPWM5 <= 0) {
       digitalWrite(IN1, 1);
       digitalWrite(IN2, 0);
-      analogWrite(pwmPin1, abs(currPWM1));
-      dir1 = -1;
+      analogWrite(pwmPin1, abs(currPWM5));
+      dir5 = -1;
     } else {
       digitalWrite(IN1, 0);
       digitalWrite(IN2, 1);
-      analogWrite(pwmPin1,abs(currPWM1));
-      dir1 = 1;
+      analogWrite(pwmPin1,abs(currPWM5));
+      dir5 = 1;
     }
   }
 
   //Only adjust motor 2 if it hasn't hit the target yet
   if(motor6Running){
-    currPWM2 = Ki2*error2;
-    if (currPWM2 >= 255) {currPWM2 = 255;}
-    if (currPWM2 <= -255) {currPWM2 = -255;}
-    if (currPWM2 <= 0) {
+    currPWM6 = Ki6*error6;
+    if (currPWM6 >= 255) {currPWM6 = 255;}
+    if (currPWM6 <= -255) {currPWM6 = -255;}
+    if (currPWM6 <= 0) {
       digitalWrite(IN3, 1);
       digitalWrite(IN4, 0);
-      analogWrite(pwmPin2,abs(currPWM2));
-      dir2 = -1;
+      analogWrite(pwmPin2,abs(currPWM6));
+      dir6 = -1;
     } else {
       digitalWrite(IN3, 0);
       digitalWrite(IN4, 1);
-      analogWrite(pwmPin2,abs(currPWM2));
-      dir2 = 1;
+      analogWrite(pwmPin2,abs(currPWM6));
+      dir6 = 1;
     }
   }
   
@@ -155,9 +155,9 @@ void update_error()
 }
 
 //Read encoder function
-float readAngle(float &num1, float &num2){
-  int raw_value = analogRead(encPin1);
+float readAngleDC(float &num1, float &num2){
+  int raw_value = analogRead(encPin5);
   num1 = (raw_value/1023.0)*(5/3.3)*(360.0);
-  int raw_value2 = analogRead(encPin2);
+  int raw_value2 = analogRead(encPin6);
   num2 = (raw_value2/1023.0)*(5/3.3)*(360.0);
 }
