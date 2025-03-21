@@ -195,7 +195,7 @@ def create_command(theta_list_set):
         contour_command = ""
         for thetas in contour:
             for theta in thetas:
-                contour_command += str(round(theta, 2))
+                contour_command += str(round(theta*180/np.pi, 2))
                 contour_command += ","
         contour_commands.append(contour_command[:-1])
     
@@ -224,5 +224,4 @@ def create_command(theta_list_set):
 
 def call_test():
     return create_command(theta_list_set) + '/'
-#print(call_test())
-#print(call_test())
+print(call_test())

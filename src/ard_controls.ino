@@ -246,7 +246,7 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
     //parse the A to B command 
     //Return the STARTING POINT, and an array of SEGMENTED MOVEMENTS
 
-    // Array to hold a group of 7 floats
+    // Array to hold a group of 6 floats
     float group[6];
     int groupIndex = 0;
 
@@ -260,7 +260,7 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
       group[groupIndex] = num;
       groupIndex++;
 
-      // When we’ve collected 7 numbers, process the group
+      // When we’ve collected 6 numbers, process the group
       if (groupIndex == 6) {
         // Example processing: print the group to Serial
         for (int i = 0; i < 6; i++) {
