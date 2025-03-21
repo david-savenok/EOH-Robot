@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
 
-#MOTORS OF INTEREST
-MOTORS_OF_INTEREST = (1, 1, 14, 9, 9)
+#MOTORS OF INTEREST 2, 3, 4, 5, 6
+MOTORS_OF_INTEREST = (2, 2, 15, 10, 17)
 #Defining the motors, torques, weights, and costs in corresponding arrays, then assigning them to an overarching dataframe
-names = ["Twotrees Nema 17", "Twotrees Nema17 w20:1 gearing", "SOULUCK Nema 23 A", "STEPPERONLINE CNC Nema 23", "SOULUCK Nema 23 B", "SOULUCK Nema 23 C", "SOULUCK Nema 23 D", "STEPPERONLINE Nema 23", "SOULUCK Nema 23 E", "SOULUCK Nema 23 F", "HobbyUnlimited Nema 34", "FILFEEL Micro Gearmotor", "Greartisan 12V DC Motor 100RPM", "Greartisan 12V DC Motor 120RPM", "Greartisan 12V DC Motor 200RPM", "Greartisan 12V DC Motor 60RPM", "Fafeicy 12V DC Motor", "Greartsian 12V 30 RPM"]
-torques = [0.3098, (0.3098*20) ,0.5163, 0.93, 0.9588, 1.4751, 1.6226, 1.7701, 1.8439, 2.2127, 6.2693, 0.1627, 0.2604, 0.4701, 0.1591, 0.4701, 0.405, 0.867961662145188] #ft lb
-weights = [0.64, (0.64+0.71), 1.16, 1.5, 1.68, 2.43, 2.67, 2.64555, 3.34, 3.78, 7.93664, 0.02866, 0.4875, 0.4544, 0.4631, 0.4606, 0.3638, 0.675] #lb
-costs = [8.00, 32.34, 19.00, 26.00, 20.00, 25.00, 26.00, 26.00, 37.00, 40.00, 58.00, 8.75, 15, 15, 15, 15, 15.7, 14.99] #USD
+names = ["Twotrees Nema 17", "Twotrees Nema17 w20:1 gearing", "Twotrees Nema17 w50:1 gearing", "SOULUCK Nema 23 A", "STEPPERONLINE CNC Nema 23", "SOULUCK Nema 23 B", "SOULUCK Nema 23 C", "SOULUCK Nema 23 D", "STEPPERONLINE Nema 23", "SOULUCK Nema 23 E", "SOULUCK Nema 23 F", "HobbyUnlimited Nema 34", "FILFEEL Micro Gearmotor", "Greartisan 12V DC Motor 100RPM", "Greartisan 12V DC Motor 120RPM", "Greartisan 12V DC Motor 200RPM", "Greartisan 12V DC Motor 60RPM", "Fafeicy 12V DC Motor", "Greartsian 12V 30 RPM"]
+torques = [0.3098, (0.3098*20), (0.3098*50) ,0.5163, 0.93, 0.9588, 1.4751, 1.6226, 1.7701, 1.8439, 2.2127, 6.2693, 0.1627, 0.2604, 0.4701, 0.1591, 0.4701, 0.405, 0.867961662145188] #ft lb
+weights = [0.64, (0.64+0.71), (0.64+0.71), 1.16, 1.5, 1.68, 2.43, 2.67, 2.64555, 3.34, 3.78, 7.93664, 0.02866, 0.4875, 0.4544, 0.4631, 0.4606, 0.3638, 0.675] #lb
+costs = [8.00, 32.34, 32.34, 19.00, 26.00, 20.00, 25.00, 26.00, 26.00, 37.00, 40.00, 58.00, 8.75, 15, 15, 15, 15, 15.7, 14.99] #USD
 motors = pd.DataFrame({'Name': names, 'Torque': torques, 'Weight': weights, 'Cost': costs})
 
 density = 0.4/12 #lbs per inch of 80X20
