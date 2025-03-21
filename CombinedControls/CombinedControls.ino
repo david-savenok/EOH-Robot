@@ -56,6 +56,11 @@ float theta2; //degrees
 float theta3; //degrees
 float theta4; //degrees
 
+int rot1 = 0;
+int rot2 = 0;
+int rot3 = 0;
+int rot4 = 0;
+
 short steps[4];
 float frequencies[4];
 float timescale;
@@ -70,14 +75,16 @@ float currPos5 = 360;
 float desPos5 = 0;
 int dir5 = 1;
 int currPWM5 = 100; // current++ PWM output
+bool motor5Running = false;
 
 float currPos6 = 0;
 float desPos6 = 0;
 int dir6 = 1;
 int currPWM6 = 100; // current++ PWM output
+bool motor6Running = false;
 
-int toc = 10;
-int tic = 10;
+int toc = 0;
+int tic = 0;
 
 float error5 = 0;
 float error6 = 0;
@@ -102,8 +109,8 @@ void setup() {
   //DC pin settings
   pinMode(encPin5, INPUT);
   pinMode(encPin6, INPUT);
-  pinMode(pwmPin1, OUTPUT);
-  pinMode(pwmPin2, OUTPUT);
+  pinMode(pwmPin5, OUTPUT);
+  pinMode(pwmPin6, OUTPUT);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
@@ -206,6 +213,7 @@ ISR(TIMER3_COMPB_vect) {
     digitalWrite(STEP_PIN2, LOW);   // End step pulse
   }
 }
+
 //3----------------------------------------------------------------------------------------------------
 ISR(TIMER4_COMPA_vect) {
   if (motor3Running) {
@@ -235,9 +243,10 @@ ISR(TIMER5_COMPB_vect) {
 
 //-----------------------------------------------------------------------------------------------------
 void loop() {
+  timePassed = millis() - prevMillis;
   if (Serial.available() > 0) {
     parseString();
-    if (!motor1Running) {
+    if (!motor1Running) { //MUST BE THAT ALL MOTORS ARE NOT MOVING
       runSteppers();
     }
   }if(count1 >= steps[0]){
@@ -253,7 +262,6 @@ void loop() {
     motor4Running = false;
     count4 = 0;
   }
-  timePassed = millis() - prevMillis;
   if(timePassed >= loopTime){
     runDCs();
     //print_motor_info(); //For debugging
@@ -267,6 +275,7 @@ void parseString(){
   int commaLoc1 = command.indexOf(',');
   int commaLoc2 = -1;
   int commaLoc3 = -1;
+  int commaLoc4 = -1;
   desPos1 = (command.substring(0, commaLoc1)).toFloat();
   desPos2 = desPos1;
   desPos5 = desPos1;
@@ -285,18 +294,18 @@ void parseString(){
 }
 
 void runSteppers(){
-  theta1 = desPos1 - readEncoderStepper(curPos1, A1);
-  theta2 = desPos2 - readEncoderStepper(curPos2, A2);
-  theta3 = desPos3 - readEncoderStepper(curPos3, A3);
-  theta4 = desPos4 - readEncoderStepper(curPos4, A4);
-  digitalWrite(DIR_PIN1, (theta1 > 0) ? LOW : HIGH);
-  digitalWrite(DIR_PIN2, (theta2 > 0) ? LOW : HIGH);
-  digitalWrite(DIR_PIN3, (theta3 > 0) ? LOW : HIGH);
-  digitalWrite(DIR_PIN4, (theta4 > 0) ? LOW : HIGH);
-  steps[0] = short((abs(theta1)*20)/1.8); 
-  steps[1] = short((abs(theta2)*50)/1.8); 
-  steps[2] = short((abs(theta3)*20)/1.8);
-  steps[3] = short((abs(theta4)*20)/1.8);
+  theta1 = desPos1 - (((rot1*360.0)/20.0) + readEncoderStepper(curPos1, A1));
+  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(curPos2, A2));
+  theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(curPos3, A3));
+  theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(curPos4, A4));
+  digitalWrite(DIR_PIN1, (theta1 >= 0) ? LOW : HIGH);
+  digitalWrite(DIR_PIN2, (theta2 >= 0) ? LOW : HIGH);
+  digitalWrite(DIR_PIN3, (theta3 >= 0) ? LOW : HIGH);
+  digitalWrite(DIR_PIN4, (theta4 >= 0) ? LOW : HIGH);//maybe change back >= -> >
+  steps[0] = short((abs(theta1)*20.0)/1.8); 
+  steps[1] = short((abs(theta2)*50.0)/1.8); 
+  steps[2] = short((abs(theta3)*20.0)/1.8);
+  steps[3] = short((abs(theta4)*20.0)/1.8);
   mostSteps = steps[0];
   mostStepsIndex = 0;
   for (int i=1; i<4; i++){
@@ -308,35 +317,40 @@ void runSteppers(){
   frequencies[mostStepsIndex] = 1000;
   timescale = mostSteps/frequencies[mostStepsIndex];
 
-  for (int i = 0; i<4; i++){
-    if (i != mostStepsIndex){
-      frequencies[i] = steps[i]/timescale;
+  if (timescale != 0){
+    for (int i = 0; i<4; i++){
+      if (i != mostStepsIndex){
+        frequencies[i] = steps[i]/timescale;
+      }
     }
+    noInterrupts();
+    OCR1A = calcOCRA(frequencies[0], 32);
+    OCR3A = calcOCRA(frequencies[1], 32);
+    OCR4A = calcOCRA(frequencies[2], 32); 
+    OCR5A = calcOCRA(frequencies[3], 32);
+    interrupts();
+    if (steps[0] > 0) motor1Running = true;
+    if (steps[1] > 0) motor2Running = true;
+    if (steps[2] > 0) motor3Running = true;
+    if (steps[3] > 0) motor4Running = true;
   }
-  noInterrupts();
-  OCR1A = calcOCRA(frequencies[0], 32);
-  OCR3A = calcOCRA(frequencies[1], 32);
-  OCR4A = calcOCRA(frequencies[2], 32); 
-  OCR5A = calcOCRA(frequencies[3], 32);
-  interrupts();
-
-  motor1Running = true;
-  motor2Running = true;
-  motor3Running = true;
-  motor4Running = true;
   Serial.println("Motors started.");
+  rot1 += floor((theta1*20)/360);
+  rot2 += floor((theta2*50)/360);
+  rot3 += floor((theta3*20)/360);
+  rot4 += floor((theta4*20)/360);
 }
 
 void runDCs(){
-  readAngleDC(currPos5, currPos6);
+  readEncoderDC(currPos5, currPos6);
 
   motor5Running = true; //End conditions
   motor6Running = true;
-  error5 = refPos-currPos; //position error
+  error5 = desPos5-currPos5; //position error
   if (error5 > 180) error5 -= 360;  // Ensure shortest path
   if (error5 < -180) error5 += 360;
   
-  error6 = refPos2-currPos6; //position error
+  error6 = desPos6-currPos6; //position error
   if (error6 > 180) error6 -= 360;  // Ensure shortest path
   if (error6 < -180) error6 += 360;
 
@@ -357,18 +371,16 @@ void runDCs(){
   //Only adjust motor 5 if it hasn't hit the target yet
   if(motor5Running){
     currPWM5 = Ki5*error5;
-    if (currPWM5 >= 255) {currPWM5 = 255;}
-    if (currPWM5 <= -255) {currPWM5 = -255;}
+    if (currPWM5 >= 255) currPWM5 = 255;
+    if (currPWM5 <= -255) currPWM5 = -255;
     if (currPWM5 <= 0) {
       digitalWrite(IN1, 1);
       digitalWrite(IN2, 0);
-      analogWrite(pwmPin1, abs(currPWM5));
-      dir5 = -1;
+      analogWrite(pwmPin5, abs(currPWM5));
     } else {
       digitalWrite(IN1, 0);
       digitalWrite(IN2, 1);
-      analogWrite(pwmPin1,abs(currPWM5));
-      dir5 = 1;
+      analogWrite(pwmPin5,abs(currPWM5));
     }
   }
 
@@ -380,13 +392,11 @@ void runDCs(){
     if (currPWM6 <= 0) {
       digitalWrite(IN3, 1);
       digitalWrite(IN4, 0);
-      analogWrite(pwmPin2,abs(currPWM6));
-      dir6 = -1;
+      analogWrite(pwmPin6,abs(currPWM6));
     } else {
       digitalWrite(IN3, 0);
       digitalWrite(IN4, 1);
-      analogWrite(pwmPin2,abs(currPWM6));
-      dir6 = 1;
+      analogWrite(pwmPin6,abs(currPWM6));
     }
   }
 }
@@ -403,7 +413,14 @@ float readEncoderStepper(float &currentPos, int analogPin){
   currentPos = (analogPin == A2) ? (((analogRead(analogPin)/1023.0)*(5/4.25)*(360.0))/50.0) : (((analogRead(analogPin)/1023.0)*(5/4.25)*(360.0))/20.0);
 }
 
-float readAngleDC(float &num1, float &num2){
+void print_motor_info(){
+  //print current position, desired position, error, and pwm value
+  Serial.println("currPos desPos error pwm");
+  Serial.println(String(currPos5) + " " + String(desPos5) + " " + String(error5) + " " + String(currPWM5));
+  Serial.println(String(currPos6) + " " + String(desPos6) + " " + String(error6) + " " + String (currPWM6));
+}
+
+float readEncoderDC(float &num1, float &num2){
   int raw_value = analogRead(encPin5);
   num1 = (raw_value/1023.0)*(5/3.3)*(360.0);
   int raw_value2 = analogRead(encPin6);
