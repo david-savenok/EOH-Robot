@@ -20,6 +20,26 @@
 #define encPin5 A5
 #define encPin6 A6
 
+//Joint limits
+
+float motor1LB = -360.0*(20/360.0); //units of full rotations
+float motor1UB =  360.0*(20/360.0);
+
+float motor2LB = -25.0*(50/360.0);
+float motor2UB =  205.0*(50/360.0);
+
+float motor3LB = -145.0*(20/360.0);
+float motor3UB =  145.0*(20/360.0);
+
+float motor4LB = -720.0*(20/360.0);
+float motor4UB =  720.0*(20/360.0);
+
+float motor5LB = -720.0/360.0;////EDIT FOR DCS
+float motor5UB =  720.0/360.0;
+
+float motor6LB = -720.0/360.0;
+float motor6UB =  720.0/360.0;
+
 //Stepper globals
 
 bool motor1Running = false;  // State to track HIGH/LOW for step pulse
@@ -294,14 +314,49 @@ void parseString(){
 }
 
 void runSteppers(){
-  theta1 = desPos1 - (((rot1*360.0)/20.0) + readEncoderStepper(curPos1, A1));
-  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(curPos2, A2));
+  theta1 = desPos1 - (((rot1*360.0)/20.0) + readEncoderStepper(curPos1, A1)); //find relative angle to move
+  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(curPos2, A2)); //DOUBLE CHECK FOR FMOD
   theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(curPos3, A3));
   theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(curPos4, A4));
+
+  rot1 += floor((theta1*20.0)/360.0); //find the next rotation value
+  rot2 += floor((theta2*50.0)/360.0);
+  rot3 += floor((theta3*20.0)/360.0);
+  rot4 += floor((theta4*20.0)/360.0);
+
+  if ((rot1 + fmod((theta1*20.0)/360.0)) < motor1UB && (rot1 + fmod((theta1*20.0)/360.0)) > motor1LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
+    if (theta1 >  180) theta1 -= 360.0; 
+    if (theta1 < -180) theta1 += 360.0;
+  } else { //if outside the bound change directions to the correct point still
+    if (theta1 > 0)    theta1 -= 360.0;
+    if (theta1 < 0)    theta1 += 360.0;
+  }
+  if ((rot2 + fmod((theta2*50.0)/360.0)) < motor2UB && (rot2 + fmod((theta2*50.0)/360.0)) > motor2LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
+    if (theta2 >  180) theta2 -= 360.0;
+    if (theta2 < -180) theta2 += 360.0;
+  } else { 
+    if (theta2 > 0)    theta2 -= 360.0;
+    if (theta2 < 0)    theta2 += 360.0;
+  }
+    if ((rot3 + fmod((theta3*20.0)/360.0)) < motor3UB && (rot3 + fmod((theta3*20.0)/360.0)) > motor3LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
+    if (theta3 >  180) theta3 -= 360.0; 
+    if (theta3 < -180) theta3 += 360.0;
+  } else {
+    if (theta3 > 0)    theta3 -= 360.0;
+    if (theta3 < 0)    theta3 += 360.0;
+  }
+    if ((rot4 + fmod((theta4*20.0)/360.0)) < motor4UB && (rot4 + fmod((theta4*20.0)/360.0)) > motor4LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
+    if (theta4 >  180) theta4 -= 360.0; 
+    if (theta4 < -180) theta4 += 360.0;
+  } else {
+    if (theta4 > 0)    theta4 -= 360.0;
+    if (theta4 < 0)    theta4 += 360.0;
+  }
+
   digitalWrite(DIR_PIN1, (theta1 >= 0) ? LOW : HIGH);
   digitalWrite(DIR_PIN2, (theta2 >= 0) ? LOW : HIGH);
   digitalWrite(DIR_PIN3, (theta3 >= 0) ? LOW : HIGH);
-  digitalWrite(DIR_PIN4, (theta4 >= 0) ? LOW : HIGH);//maybe change back >= -> >
+  digitalWrite(DIR_PIN4, (theta4 >= 0) ? LOW : HIGH);
   steps[0] = short((abs(theta1)*20.0)/1.8); 
   steps[1] = short((abs(theta2)*50.0)/1.8); 
   steps[2] = short((abs(theta3)*20.0)/1.8);
@@ -335,21 +390,23 @@ void runSteppers(){
     if (steps[3] > 0) motor4Running = true;
   }
   Serial.println("Motors started.");
-  rot1 += floor((theta1*20)/360);
-  rot2 += floor((theta2*50)/360);
-  rot3 += floor((theta3*20)/360);
-  rot4 += floor((theta4*20)/360);
 }
 
 void runDCs(){
+////////////////////////////////////////////////////////////////////////////////////Changed
   readEncoderDC(currPos5, currPos6);
-
   motor5Running = true; //End conditions
   motor6Running = true;
-  error5 = desPos5-currPos5; //position error
-  if (error5 > 180) error5 -= 360;  // Ensure shortest path
-  if (error5 < -180) error5 += 360;
-  
+  error5 = desPos5 - currPos5; //position error
+
+  if ((rot5 + error5 + 360) < motor5UB && (rot5 + error5) < motor5UB)){
+    if (error5 > 180) error5 -= 360.0;  // Ensure shortest path
+    if (error5 < -180) error5 += 360.0;
+  } else {
+    TAKE LONG WAY;
+  }
+
+///////////////////////////////////////////////////////////////////////////////////////
   error6 = desPos6-currPos6; //position error
   if (error6 > 180) error6 -= 360;  // Ensure shortest path
   if (error6 < -180) error6 += 360;
@@ -359,12 +416,14 @@ void runDCs(){
     digitalWrite(IN1, 1);
     digitalWrite(IN2, 1);
     currPWM5 = 0;
+    analogWrite(pwmPin5, abs(currPWM5));
     motor5Running = false;
   }
   if (abs(error6) < 10) {
     digitalWrite(IN3, 1);
     digitalWrite(IN4, 1);
     currPWM6 = 0;
+    analogWrite(pwmPin6, abs(currPWM6)); //CHECK
     motor6Running = false;
   }
   
