@@ -248,7 +248,6 @@ void loop() {
         if (steps[2] > 0) motor3Running = true;
         if (steps[3] > 0) motor4Running = true;
       }
-
       Serial.println("Motors started.");
       rot1 += floor((theta1*20)/360);
       rot2 += floor((theta2*50)/360);
