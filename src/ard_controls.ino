@@ -10,7 +10,8 @@ float zeroOffset[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 float desiredAngles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 Servo clawServo;
 float acceptable_percent_error = 0.01; //FIGURE THIS OUT EXPERIMENTALLY TUNE
-unsigned long currentMillis = 0;
+unsigned long currentMillis;
+unsigned long startMillis;
 //-------------------LITERALLY WHAT IS THIS----------------------------
 using namespace std;
 
@@ -71,6 +72,7 @@ Buffer* bufB = malloc(sizeof(Buffer));
 Buffer* to_fill = bufA;
 Buffer* to_use = NULL;
 bool signal_sent = false;
+bool start_comms;
 
 //------------------------SETUP----------------------------------------
 //bool moveMotors(vector<float> startingPoint, vector<vector<float>> segmentedMovements);
@@ -78,14 +80,14 @@ bool signal_sent = false;
 void setup() {
     //clawServo.attach(CHOOSE A PIN PLEASE);
     Serial.begin(9600);
-    Serial1.begin(9600);
+    //Serial1.begin(9600);
     bufA->name = 'A';
     bufB->name = 'B';
-    bufA->is_full = true;
+    bufA->is_full = false;
     bufB->is_full = false;
     bufA->buf = malloc(1500);
     bufB->buf = malloc(1500);
-    strcpy(bufA->buf, "/S*H*/M*0,-1.59,-1.53,1.48,0,0,0,-1.61,-1.55,1.64,0,0,0,-1.45,-1.61,1.64,0,0,0,-1.49,-1.44,1.81,0,0,0,-1.47,-1.38,1.69,0,0,0,-1.33,-1.45,1.65,0,0*/L*0*/M*0,-1.33,-1.45,1.65,0,0,0,-1.4,-1.31,1.44,0,0*/L*1*/M*0,-1.4,-1.31,1.44,0,0,0,-1.4,-1.31,1.44,0,0,0,-1.29,-1.36,1.42,0,0,0,-1.29,-1.36,1.43,0,0,0,-1.3,-1.37,1.49,0,0,0,-1.3,-1.37,1.5,0,0,0,-1.31,-1.33,1.55,0,0,0,-1.35,-1.21,1.67,0,0,0,-1.34,-1.21,1.65,0,0*/L*0*/M*0,-1.34,-1.21,1.65,0,0,0,-1.18,-1.07,1.2,0,0*/L*1*/M*0,-1.18,-1.07,1.2,0,0,0,-1.17,-1.07,1.19,0,0,0,-1.09,-1.02,1.0,0,0,0,-1.0,-1.05,0.94,0,0,0,-1.0,-1.05,0.94,0,0,0,-1.09,-1.11,1.18,0,0,0,-1.1,-1.08,1.21,0,0*/L*0*/M*0,-1.1,-1.08,1.21,0,0,0,-1.29,-1.12,1.67,0,0*/L*1*/M*0,-1.29,-1.12,1.67,0,0,0,-1.3,-1.15,1.75,0,0,0,-1.24,-1.19,1.73,0,0,0,-1.2,-1.23,1.69,0,0,0,-1.19,-1.2,1.63,0,0*/L*0*/M*0,-1.19,-1.2,1.63,0,0,0,-1.18,-1.07,1.21,0,0*/L*1*/M*0,-1.18,-1.07,1.21,0,0,0,-1.12,-1.09,1.2,0,0,0,-1.09,-1.11,1.18,0,0,0,-0.99,-1.04,0.96,0,0,0,-1.06,-0.94,1.09,0,0*/L*0*/M*0,-1.06,-0.94,1.09,0,0,0,-1.18,-1.01,1.41,0,0*/L*1*/M*0,-1.18,-1.01,1.41,0,0,0,-1.15,-0.98,1.33,0,0,0,-1.14,-0.99,1.33,0,0,0,-1.08,-1.02,1.31,0,0,0,-1.06,-1.03,1.3,0,0,0,-1.06,-1.03,1.3,0,0,0,-1.08,-1.05,1.38,0,0,0,-1.09,-1.05,1.39,0,0,0,-1.13,-0.93,1.51,0,0*/L*0*/M*0,-1.13,-0.93,1.51,0,0,0,-1.18,-0.96,1.65,0,0*/L*1*/M*0,-1.18,-0.96,1.65,0,0,0,-1.14,-0.93,1.54,0,0,0,-1.05,-0.98,1.49,0,0,0,-1.05,-0.98,1.5,0,0,0,-1.08,-1.02,1.62,0,0,0,-1.08,-1.02,1.62,0,0,0,-1.11,-0.94,1.7,0,0,0,-1.13,-0.89,1.74,0,0*/L*0*/E*X,0.0,-0.79,1.57,-0.79,0.0,0.0*/");
+    start_comms = true;
     //pins and stuff
 }
 
@@ -109,17 +111,31 @@ void loop() {
 
   //Serial.println(bufA->name);
   //Serial.println(bufB->name);
-  if (bufA->is_full) {
-    
-    bool success = handleInstructionSet(&(bufA->buf));
-    //Serial1.println(bufA->buf);
+  if (start_comms) {
+    Serial.println(strlen(bufA->buf));
     bufA->is_full = false;
-    //Serial.println("A");
+    Serial.println("A");
+    start_comms = false;
+  }
+  if (bufA->is_full) {
+    //bool success = handleInstructionSet(&(bufA->buf));
+    bool success = true;
+    if (success) {
+      Serial.println(strlen(bufA->buf));
+      bufA->is_full = false;
+      Serial.println("A");
+    }
+    
+    
   }
   if (bufB->is_full) {
-    Serial1.println(bufB->buf);
-    bufB->is_full = false;
-    //Serial.println("A");
+    //bool success = handleInstructionSet(&(bufB->buf));
+    bool success = true;
+    if (success) {
+      Serial.println(strlen(bufB->buf));
+      bufB->is_full = false;
+      Serial.println("A");
+    }
   }
   /*
   if (!to_fill->is_full && !signal_sent) {
@@ -127,20 +143,18 @@ void loop() {
     signal_sent = true;
   }
   */
-  delay(1000);
-
 }
 
 //------------------------EVENT HANDLER---------------------------------
-/*
+
 void serialEvent() {
-  while (Serial.available() > 0) {
-    //Serial.println("word");
-    if (!to_fill->is_full) {
+  while (Serial.available() > 0) {   
+    if (!to_fill->is_full) {       
       Serial.readBytesUntil('\0', to_fill->buf, 1500);
       char* terminating_char = strchr(to_fill->buf, 'Q');
-      *terminating_char = '\0';
+      *terminating_char = '\0';  
     }
+    
     if (strlen(to_fill->buf) > 0) {
       if (to_fill->name == 'A') {
         to_fill->is_full = true;
@@ -156,18 +170,18 @@ void serialEvent() {
         //Serial.print('A');
       }     
     }
-  }
+  } 
 }
-*/
+
 
 bool handleInstructionSet(char** instruction_set) {
   //String instruction_set = Serial.readString();//!!!! do this idk how
   Instruction curr_data = parseInstructionSet(instruction_set); 
-  //return true;
   //Serial.println(curr_data.instruction_type);
   if (**instruction_set != "") {
     //Serial.println(*instruction_set);
     //Serial.println(curr_data.command);
+    //return true;
   }
   //Serial.print("wowza\n");
   if (curr_data.instruction_type == 'S') { //Check if the instruction type of the first was a correct starting command
@@ -228,11 +242,14 @@ Instruction parseInstructionSet(char** instruction_set) {
     size_t i = 0;
     if (*(*instruction_set + i) == '/') {
         i++;
+        if (*(*instruction_set + i) == '\0') {
+          
+        }
         instruction_type = *(*instruction_set + i);
         i += 2;
         result.command_start = (*instruction_set + i);
         while (*(*instruction_set + i) != '/') {
-            i++;
+          i++;
         }
         result.command_end = (*instruction_set + i);
         *instruction_set = (*instruction_set + i);
@@ -246,7 +263,7 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
     //parse the A to B command 
     //Return the STARTING POINT, and an array of SEGMENTED MOVEMENTS
 
-    // Array to hold a group of 6 floats
+    // Array to hold a group of 7 floats
     float group[6];
     int groupIndex = 0;
 
@@ -260,7 +277,7 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
       group[groupIndex] = num;
       groupIndex++;
 
-      // When we’ve collected 6 numbers, process the group
+      // When we’ve collected 7 numbers, process the group
       if (groupIndex == 6) {
         // Example processing: print the group to Serial
         for (int i = 0; i < 6; i++) {
