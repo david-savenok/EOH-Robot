@@ -93,15 +93,16 @@ const float loopTime = 10; // every X ms, the code enters update_speed()
 int timePassed = 0;
 unsigned long prevMillis = 0; // last time (ms) the code entered update_speed()
 
+bool passZero5 = false;
+bool passZero6 = false;
+
 float currPos5 = 360;
 float desPos5 = 0;
-int dir5 = 1;
 int currPWM5 = 100; // current++ PWM output
 bool motor5Running = false;
 
 float currPos6 = 0;
 float desPos6 = 0;
-int dir6 = 1;
 int currPWM6 = 100; // current++ PWM output
 bool motor6Running = false;
 
@@ -271,7 +272,7 @@ void loop() {
   (!motor1Running && !motor2Running && !motor3Running && !motor4Running) ? steppersOff = true : steppersOff = false;
   if (Serial.available() > 0) {
     parseString();
-    if (steppersOff) { 
+    if (steppersOff && !checkSteppers) { 
       runSteppers(); //SHOULD TAKE DESPOS1-4, AND SHOULD NOT BE GLOBAL VARIABLES || ALSO ADD A FLAG TO SIGNAL WHEN THIS IS COMPLETE AND CORRECT STEPPERS NEEDS TO RUN
     }
   }if(count1 >= steps[0]){
@@ -287,7 +288,11 @@ void loop() {
     motor4Running = false;
     count4 = 0;
   }
-  if (steppersOff && checkSteppers) correctSteppers();
+  if (steppersOff && checkSteppers) {
+    //Serial.println(steps[0]);
+    //correctSteppers();
+    checkSteppers = false;
+  }
   if (timePassed >= loopTime) {
     updateDCs();
     //print_motor_info(); //For debugging
@@ -317,27 +322,30 @@ void parseString(){
     desPos6 = (command.substring(commaLoc3+1, commaLoc4)).toFloat();
   }
 }
+
 void correctSteppers(){
-  theta1 = desPos1 - (((rot1*360.0)/20.0) + readEncoderStepper(curPos1, A1)); //find relative angle to move
-  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(curPos2, A2)); //DOUBLE CHECK FOR FMOD
-  theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(curPos3, A3));
-  theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(curPos4, A4));
+  Serial.println("called");
+  readEncoderStepper(&curPos1, A1);
+  theta1 = desPos1 - (((rot1*360.0)/20.0) + curPos1); //find relative angle to move
+  theta2 = 0;//desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2)); //DOUBLE CHECK FOR FMOD
+  theta3 = 0;//desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3));
+  theta4 = 0;//desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(&curPos4, A4));
   if (abs(theta1) > 1.8) {
-    digitalWrite(DIR_PIN1, (theta1 >= 0) ? LOW : HIGH);
+    digitalWrite(DIR_PIN1, (theta1 >= 0) ? HIGH : LOW);
     steps[0] = short((abs(theta1)*20.0)/1.8);   
-  } else steps[0] = 0
+  } else steps[0] = 0;
   if (abs(theta2) > 1.8) {
-    digitalWrite(DIR_PIN2, (theta2 >= 0) ? LOW : HIGH);
+    digitalWrite(DIR_PIN2, (theta2 >= 0) ? HIGH : LOW);
     steps[1] = short((abs(theta2)*20.0)/1.8);   
-  } else steps[1] = 0
+  } else steps[1] = 0;
   if (abs(theta3) > 1.8) {
-    digitalWrite(DIR_PIN3, (theta3 >= 0) ? LOW : HIGH);
+    digitalWrite(DIR_PIN3, (theta3 >= 0) ? HIGH : LOW);
     steps[2] = short((abs(theta3)*20.0)/1.8);   
-  } else steps[2] = 0
+  } else steps[2] = 0;
   if (abs(theta4) > 1.8) {
-    digitalWrite(DIR_PIN4, (theta4 >= 0) ? LOW : HIGH);
+    digitalWrite(DIR_PIN4, (theta4 >= 0) ? HIGH : LOW);
     steps[3] = short((abs(theta4)*20.0)/1.8);   
-  } else steps[3] = 0
+  } else steps[3] = 0;
 
   mostSteps = steps[0];
   mostStepsIndex = 0;
@@ -354,7 +362,9 @@ void correctSteppers(){
   if (timescale != 0){
     for (int i = 0; i<4; i++){
       if (i != mostStepsIndex){
-        frequencies[i] = steps[i]/timescale;
+        if (steps[i] != 0){
+          frequencies[i] = steps[i]/timescale;
+        } else frequencies[i] = 1000;
       }
     }
     noInterrupts();
@@ -369,45 +379,41 @@ void correctSteppers(){
     if (steps[3] > 0) motor4Running = true;
   }
   Serial.println("Motors moving to correction.");
+  Serial.println(steps[0]);
   checkSteppers = false;
 }
 
 void runSteppers(){
-  theta1 = desPos1 - (((rot1*360.0)/20.0) + readEncoderStepper(curPos1, A1)); //find relative angle to move
-  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(curPos2, A2)); //DOUBLE CHECK FOR FMOD
-  theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(curPos3, A3));
-  theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(curPos4, A4));
+  readEncoderStepper(&curPos1, A1);
+  theta1 = desPos1 - (((rot1*360.0)/20.0) + curPos1); //find relative angle to move
+  Serial.println(curPos1);
+  Serial.println(theta1);
+  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2)); 
+  theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3));
+  theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(&curPos4, A4));
 
-  rot1 += floor((theta1*20.0)/360.0); //find the next rotation value
+  rot1 += int((theta1*20.0)/360.0); //find the next rotation value
+  Serial.println(rot1);
   rot2 += floor((theta2*50.0)/360.0); //gives positive rots IS WRONG
   rot3 += floor((theta3*20.0)/360.0);
   rot4 += floor((theta4*20.0)/360.0);
 
-  if ((rot1 + fmod((theta1*20.0)/360.0)) < motor1UB && (rot1 + fmod((theta1*20.0)/360.0)) > motor1LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
-    if (theta1 >  180) {
-      rot1 -= floor((theta1*20.0)/360.0);
-      theta1 -= 360.0; 
-      rot1 += floor((theta1*20.0)/360.0);
-    }
-    if (theta1 < -180) {
-      rot1 -= floor((theta1*20.0)/360.0);
-      theta1 += 360.0;
-      rot1 += floor((theta1*20.0)/360.0);
-    }
+  if ((rot1 + fmod((theta1*20.0)/360.0, 360.0)) < motor1UB && (rot1 + fmod((theta1*20.0)/360.0, 360.0)) > motor1LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
   } else { //if outside the bound change directions to the correct point 
+    Serial.println("hello ?");
     if (theta1 > 0){
-      rot1 -= floor((theta1*20.0)/360.0);
+      rot1 -= int((theta1*20.0)/360.0);
       theta1 -= 360.0; 
-      rot1 += floor((theta1*20.0)/360.0);
+      rot1 += int((theta1*20.0)/360.0);
     }
     if (theta1 < 0) {
-      rot1 -= floor((theta1*20.0)/360.0);
+      rot1 -= int((theta1*20.0)/360.0);
       theta1 += 360.0;
-      rot1 += floor((theta1*20.0)/360.0);
+      rot1 += int((theta1*20.0)/360.0);
     }
   }
 
-  if ((rot2 + fmod((theta2*50.0)/360.0)) < motor2UB && (rot2 + fmod((theta2*50.0)/360.0)) > motor2LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
+  if ((rot2 + fmod((theta2*50.0)/360.0, 360.0)) < motor2UB && (rot2 + fmod((theta2*50.0)/360.0, 360.0)) > motor2LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
     if (theta2 >  180) {
       rot2 -= floor((theta2*50.0)/360.0);
       theta2 -= 360.0; 
@@ -431,7 +437,7 @@ void runSteppers(){
     }
   }
 
-  if ((rot3 + fmod((theta3*20.0)/360.0)) < motor3UB && (rot3 + fmod((theta3*20.0)/360.0)) > motor3LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
+  if ((rot3 + fmod((theta3*20.0)/360.0, 360.0)) < motor3UB && (rot3 + fmod((theta3*20.0)/360.0, 360.0)) > motor3LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
     if (theta3 >  180) {
       rot3 -= floor((theta3*20.0)/360.0);
       theta3 -= 360.0; 
@@ -455,7 +461,7 @@ void runSteppers(){
     }
   }
 
-  if ((rot4 + fmod((theta4*20.0)/360.0)) < motor4UB && (rot4 + fmod((theta4*20.0)/360.0)) > motor4LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
+  if ((rot4 + fmod((theta4*20.0)/360.0, 360.0)) < motor4UB && (rot4 + fmod((theta4*20.0)/360.0, 360.0)) > motor4LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
     if (theta4 >  180) {
       rot4 -= floor((theta4*20.0)/360.0);
       theta4 -= 360.0; 
@@ -479,10 +485,10 @@ void runSteppers(){
     }
   }
 
-  digitalWrite(DIR_PIN1, (theta1 >= 0) ? LOW : HIGH);
-  digitalWrite(DIR_PIN2, (theta2 >= 0) ? LOW : HIGH);
-  digitalWrite(DIR_PIN3, (theta3 >= 0) ? LOW : HIGH);
-  digitalWrite(DIR_PIN4, (theta4 >= 0) ? LOW : HIGH);
+  digitalWrite(DIR_PIN1, (theta1 >= 0) ? HIGH : LOW);
+  digitalWrite(DIR_PIN2, (theta2 >= 0) ? HIGH : LOW);
+  digitalWrite(DIR_PIN3, (theta3 >= 0) ? HIGH : LOW);
+  digitalWrite(DIR_PIN4, (theta4 >= 0) ? HIGH : LOW);
   steps[0] = short((abs(theta1)*20.0)/1.8); 
   steps[1] = short((abs(theta2)*50.0)/1.8); 
   steps[2] = short((abs(theta3)*20.0)/1.8);
@@ -501,8 +507,10 @@ void runSteppers(){
   if (timescale != 0){
     for (int i = 0; i<4; i++){
       if (i != mostStepsIndex){
-        frequencies[i] = steps[i]/timescale;
-      }
+        if (steps[i] != 0) {
+          frequencies[i] = steps[i]/timescale;
+        } else frequencies[i] = 1000;
+      } 
     }
     noInterrupts();
     OCR1A = calcOCRA(frequencies[0], 32);
@@ -515,6 +523,7 @@ void runSteppers(){
     if (steps[2] > 0) motor3Running = true;
     if (steps[3] > 0) motor4Running = true;
   }
+  Serial.println(steps[0]);
   Serial.println("Motors started.");
   checkSteppers = true;
 }
@@ -523,8 +532,10 @@ void updateDCs(){
   float newPos5;
   float newPos6;
   readEncoderDC(newPos5, newPos6);
-  if(newPos != 0){
+  if(newPos5 != 0){
     passZero5 = ((newPos5>=0 != currPos5>=0) ? true : false); //If we switched signs, passZero is true
+  }
+  if(newPos6 != 0){
     passZero6 = ((newPos6>=0 != currPos6>=0) ? true : false);
   }
   
@@ -554,7 +565,15 @@ void updateDCs(){
   error6 = desPos6-currPos6; //position error
   if (error6 > 180) error6 -= 360;  // Ensure shortest path
   if (error6 < -180) error6 += 360;
-
+  if(error6>0){ //If we're rotating CW
+    if(currPos6+error6 >= 360){ //If we pass zero
+      if(rot6>0) error6 -= 360; //If passing zero is not ok, make the error the other way
+    }
+  }else{ //If we're rotating CCW
+    if(currPos6+error6 <= 0){ //If we pass zero
+      if(rot6<-1) error6 += 360; //If passing zero is not ok, make the error the other way
+    }
+  }
   //End conditions
   if (abs(error5) < 5) {
     digitalWrite(IN1, 1);
@@ -612,8 +631,8 @@ int calcOCRA(float freq, int prescale){
   return OCRA;
 }
 
-float readEncoderStepper(float &currentPos, int analogPin){
-  currentPos = (analogPin == A2) ? (((analogRead(analogPin)/1023.0)*(5/4.25)*(360.0))/50.0) : (((analogRead(analogPin)/1023.0)*(5/4.25)*(360.0))/20.0);
+float readEncoderStepper(float* currentPos, int analogPin){
+  (analogPin == A2) ? *currentPos = (((analogRead(analogPin)/1023.0)*(5/3.3)*(360.0))/50.0) : *currentPos = (((analogRead(analogPin)/1023.0)*(5/3.3)*(360.0))/20.0);
 }
 
 void print_motor_info(){
