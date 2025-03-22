@@ -418,22 +418,14 @@ void updateDCs(){
   if (error5 > 180) error5 -= 360;  // Ensure shortest path
   if (error5 < -180) error5 += 360;
   if(error5>0){ //If we're rotating CW
-    if(currPos5+error5 > 360){ //If we pass zero
+    if(currPos5+error5 >= 360){ //If we pass zero
       if(rot5>0) error5 -= 360; //If passing zero is not ok, make the error the other way
     }
   }else{ //If we're rotating CCW
-    if(currPos5+error5 < 0){ //If we pass zero
+    if(currPos5+error5 <= 0){ //If we pass zero
       if(rot5<-1) error5 += 360; //If passing zero is not ok, make the error the other way
     }
   }
-
-
-  //What are our current rotations?
-  //If we go to our desPos, will it put us over?
-  //If not, go there
-  //If yes, go the other way and add/subtract 360
-  //Did we pass 0?
-  //If yes, increment/decrement rotations
 
   error6 = desPos6-currPos6; //position error
   if (error6 > 180) error6 -= 360;  // Ensure shortest path
