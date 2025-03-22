@@ -111,6 +111,9 @@ int tic = 0;
 float error5 = 0;
 float error6 = 0;
 
+int rot5 = 0;
+int rot6 = 0;
+
 float Ki5 = 25;
 float Ki6 = 3.8;
 
@@ -286,7 +289,7 @@ void loop() {
   }
   if (steppersOff && checkSteppers) correctSteppers();
   if (timePassed >= loopTime) {
-    runDCs();
+    updateDCs();
     //print_motor_info(); //For debugging
   }
 }
@@ -516,21 +519,38 @@ void runSteppers(){
   checkSteppers = true;
 }
 
-void runDCs(){
-////////////////////////////////////////////////////////////////////////////////////Changed
-  readEncoderDC(currPos5, currPos6);
+void updateDCs(){
+  float newPos5;
+  float newPos6;
+  readEncoderDC(newPos5, newPos6);
+  if(newPos != 0){
+    passZero5 = ((newPos5>=0 != currPos5>=0) ? true : false); //If we switched signs, passZero is true
+    passZero6 = ((newPos6>=0 != currPos6>=0) ? true : false);
+  }
+  
+  if(passZero5){
+    (newPos5>=0) ? (rot5 -= 1) : (rot5 += 1);
+  }
+  if(passZero6){
+    (newPos6>=0) ? (rot6 -= 1) : (rot6 += 1);
+  }
+  currPos5 = newPos5;
+  currPos6 = newPos6;
   motor5Running = true; //End conditions
   motor6Running = true;
   error5 = desPos5 - currPos5; //position error
-
-  if ((rot5 + error5 + 360) < motor5UB && (rot5 + error5) < motor5UB)){
-    if (error5 > 180) error5 -= 360.0;  // Ensure shortest path
-    if (error5 < -180) error5 += 360.0;
-  } else {
-    TAKE LONG WAY;
+  if (error5 > 180) error5 -= 360;  // Ensure shortest path
+  if (error5 < -180) error5 += 360;
+  if(error5>0){ //If we're rotating CW
+    if(currPos5+error5 >= 360){ //If we pass zero
+      if(rot5>0) error5 -= 360; //If passing zero is not ok, make the error the other way
+    }
+  }else{ //If we're rotating CCW
+    if(currPos5+error5 <= 0){ //If we pass zero
+      if(rot5<-1) error5 += 360; //If passing zero is not ok, make the error the other way
+    }
   }
 
-///////////////////////////////////////////////////////////////////////////////////////
   error6 = desPos6-currPos6; //position error
   if (error6 > 180) error6 -= 360;  // Ensure shortest path
   if (error6 < -180) error6 += 360;
