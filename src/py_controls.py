@@ -7,7 +7,7 @@ import light_painting
 
 # Replace with your Arduino's actual port (e.g., check in Arduino IDE)
 port = '/dev/cu.usbmodem1101'  
-baud_rate = 9600  # Must match the Arduino's Serial.begin() value
+baud_rate = 115200  # Must match the Arduino's Serial.begin() value
 buffer_size = 1498
 
 def fillBuffers(data):
@@ -71,12 +71,9 @@ try:
     ret_val = ser.readline().decode('utf-8').strip()
     print(ret_val + '\n')
     while (ret_val != 'Q'):
-        if (ret_val == 'A'):
+        if (ret_val == 'A' and current_buffer < len((buffers))):
             ser.write(buffers[current_buffer].encode())
-            if (current_buffer < len(buffers) - 1):
-                current_buffer += 1
-            else:
-                break
+            current_buffer += 1
         print(ret_val + '\n')
         ret_val = ser.readline().decode('utf-8').strip()
     
