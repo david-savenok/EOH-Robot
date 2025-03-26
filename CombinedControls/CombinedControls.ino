@@ -22,17 +22,17 @@
 
 //Joint limits
 
-float motor1LB = -360.0*(20/360.0); //units of full rotations
-float motor1UB =  360.0*(20/360.0);
+float motor1LB = -360.0; //units of full rotations
+float motor1UB =  360.0;
 
-float motor2LB = -25.0*(50/360.0);
-float motor2UB =  205.0*(50/360.0);
+float motor2LB = -25.0;
+float motor2UB =  205.0;
 
-float motor3LB = -145.0*(20/360.0);
-float motor3UB =  145.0*(20/360.0);
+float motor3LB = -145.0;
+float motor3UB =  145.0;
 
-float motor4LB = -720.0*(20/360.0);
-float motor4UB =  720.0*(20/360.0);
+float motor4LB = -720.0;
+float motor4UB =  720.0;
 
 float motor5LB = -720.0/360.0;////EDIT FOR DCS
 float motor5UB =  720.0/360.0;
@@ -401,9 +401,9 @@ void correctSteppers(){
 
 void runSteppers(){
   readEncoderStepper(&curPos1, A1, fmod(previousDesPos1*20, 360.0)/20.0);
-  Serial.println(fmod(previousDesPos1*20.0, 360.0));
+  //Serial.println(fmod(previousDesPos1*20.0, 360.0));
   previousDesPos1 = desPos1;
-  theta1 = desPos1 - (((rot1*360.0)/20.0) + curPos1); //find relative angle to move
+  theta1 = desPos1 - (rot1*(360/20) + curPos1); //find geared angle to move
   Serial.println(curPos1);
   Serial.println(theta1);
   theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2, fmod(desPos2*50.0, 360.0))); 
@@ -413,26 +413,21 @@ void runSteppers(){
   if (theta1 > 180.0) theta1 -= 360.0;
   if (theta1 < -180.0) theta1 += 360.0;
 
-  rot1 += int((theta1*20.0)/360.0); //find the next rotation value
   Serial.println(rot1);
   rot2 += floor((theta2*50.0)/360.0); //gives positive rots IS WRONG
   rot3 += floor((theta3*20.0)/360.0);
   rot4 += floor((theta4*20.0)/360.0);
 
-  if ((rot1 + fmod((theta1*20.0)/360.0, 360.0)) < motor1UB && (rot1 + fmod((theta1*20.0)/360.0, 360.0)) > motor1LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
-  } else { //if outside the bound change directions to the correct point 
+  if (!((rot1*(360/20) + curPos1 + theta1) < motor1UB && (rot1*(360/20) + curPos1 + theta1) > motor1LB)) { //if outside the bound change directions to the correct point 
     Serial.println("hello ?");
     if (theta1 > 0){
-      rot1 -= int((theta1*20.0)/360.0);
       theta1 -= 360.0; 
-      rot1 += int((theta1*20.0)/360.0);
     }
     if (theta1 < 0) {
-      rot1 -= int((theta1*20.0)/360.0);
       theta1 += 360.0;
-      rot1 += int((theta1*20.0)/360.0);
     }
   }
+  rot1 = floor((rot1*(360/20) + curPos1 + theta1)*(20/360)); //find the next rotation value
 
   if ((rot2 + fmod((theta2*50.0)/360.0, 360.0)) < motor2UB && (rot2 + fmod((theta2*50.0)/360.0, 360.0)) > motor2LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
     if (theta2 >  180) {
