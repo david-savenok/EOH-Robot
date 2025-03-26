@@ -68,6 +68,11 @@ float desPos2; //degrees
 float desPos3 = 0; //degrees
 float desPos4 = 0; //degrees
 
+float previousDesPos1 = 0.0;
+float previousDesPos2 = 0.0;
+float previousDesPos3 = 0.0;
+float previousDesPos4 = 0.0;
+
 float curPos1; //degrees
 float curPos2; //degrees
 float curPos3; //degrees
@@ -85,7 +90,8 @@ int rot4 = 0;
 
 short steps[4];
 float frequencies[4];
-float timescale;
+float timescale; 
+float encZeroes[4] = {0.0, 0.0, 0.0, 0.0};
 
 //DC Globals
 
@@ -148,6 +154,16 @@ void setup() {
   digitalWrite(DIR_PIN4, LOW);
   // Start serial communication for debugging
   Serial.begin(115200);
+
+  readEncoderStepper(&curPos1, A1, 0.0);
+  readEncoderStepper(&curPos2, A2, 0.0);
+  readEncoderStepper(&curPos3, A3, 0.0);    
+  readEncoderStepper(&curPos4, A4, 0.0);
+  encZeroes[0] = curPos1;
+  Serial.println(encZeroes[0]);
+  encZeroes[1] = curPos2;
+  encZeroes[2] = curPos3;
+  encZeroes[3] = curPos4;
 
   // Disable interrupts while configuring
   noInterrupts();
@@ -325,7 +341,7 @@ void parseString(){
 
 void correctSteppers(){
   Serial.println("called");
-  readEncoderStepper(&curPos1, A1);
+  readEncoderStepper(&curPos1, A1, fmod(desPos1*20.0, 360.0));
   theta1 = desPos1 - (((rot1*360.0)/20.0) + curPos1); //find relative angle to move
   theta2 = 0;//desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2)); //DOUBLE CHECK FOR FMOD
   theta3 = 0;//desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3));
@@ -384,13 +400,18 @@ void correctSteppers(){
 }
 
 void runSteppers(){
-  readEncoderStepper(&curPos1, A1);
+  readEncoderStepper(&curPos1, A1, fmod(previousDesPos1*20, 360.0)/20.0);
+  Serial.println(fmod(previousDesPos1*20.0, 360.0));
+  previousDesPos1 = desPos1;
   theta1 = desPos1 - (((rot1*360.0)/20.0) + curPos1); //find relative angle to move
   Serial.println(curPos1);
   Serial.println(theta1);
-  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2)); 
-  theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3));
-  theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(&curPos4, A4));
+  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2, fmod(desPos2*50.0, 360.0))); 
+  theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3, fmod(desPos3*20.0, 360.0)));
+  theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(&curPos4, A4, fmod(desPos4*20.0, 360.0)));
+
+  if (theta1 > 180.0) theta1 -= 360.0;
+  if (theta1 < -180.0) theta1 += 360.0;
 
   rot1 += int((theta1*20.0)/360.0); //find the next rotation value
   Serial.println(rot1);
@@ -631,8 +652,27 @@ int calcOCRA(float freq, int prescale){
   return OCRA;
 }
 
-float readEncoderStepper(float* currentPos, int analogPin){
-  (analogPin == A2) ? *currentPos = (((analogRead(analogPin)/1023.0)*(5/3.3)*(360.0))/50.0) : *currentPos = (((analogRead(analogPin)/1023.0)*(5/3.3)*(360.0))/20.0);
+float readEncoderStepper(float* currentPos, int analogPin, float guess){
+  switch (analogPin) {
+      case A1:
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[0]; //SIGNED VALUE (AND IT SHOULD BE)
+        float checkVal = (abs(*currentPos - guess)*20.0); //MAKE SURE THAT currentPos AND guess are both between 0 and 18 when checking them, BUT THEY MUST RETURN TO THEIR ACTUAL VALUE AFTER THIS
+        //if (*currentPos < 0) float temp = *currentPos + 18.00; //
+        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess; //compare TEMP to guess and then edit current pos
+        break;
+      case A2:
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; 
+        if ((abs(*currentPos - guess)*50.0))
+        break;
+      case A3:
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[2];
+        if ((abs(*currentPos - guess)*20.0))
+        break;
+      case A4:
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[3];
+        if ((abs(*currentPos - guess)*20.0))
+        break;  
+  }
 }
 
 void print_motor_info(){
