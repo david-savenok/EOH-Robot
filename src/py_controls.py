@@ -6,8 +6,8 @@ import time
 import light_painting 
 
 # Replace with your Arduino's actual port (e.g., check in Arduino IDE)
-port = '/dev/cu.usbmodem101'  
-baud_rate = 9600  # Must match the Arduino's Serial.begin() value
+port = '/dev/cu.usbmodem1101'  
+baud_rate = 115200  # Must match the Arduino's Serial.begin() value
 buffer_size = 1498
 
 def fillBuffers(data):
@@ -37,15 +37,15 @@ def fillBuffers(data):
             current_buffer = current_buffer + 1
     
     buffers[current_buffer] += 'Q' + '\x00'
-    #print(buffers[current_buffer])
+    print(buffers[current_buffer])
     return buffers
 
 
 try:
-    # Open serial connection
+    
     ser = serial.Serial(port, baud_rate)
     print("Connected to Arduino")
-    
+
     # Wait 2 seconds for Arduino to reset after connection
     time.sleep(2)
 
@@ -63,11 +63,15 @@ try:
     #print(buffers[0])
     #print('\n\n\n')
     #print(buffers[1])
+
+    
+    #user_input = input()
+
     
     ret_val = ser.readline().decode('utf-8').strip()
     print(ret_val + '\n')
     while (ret_val != 'Q'):
-        if (ret_val == 'A'):
+        if (ret_val == 'A' and current_buffer < len((buffers))):
             ser.write(buffers[current_buffer].encode())
             current_buffer += 1
         print(ret_val + '\n')

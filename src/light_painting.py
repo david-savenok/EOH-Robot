@@ -101,45 +101,6 @@ def lightPaintingIK(x,z, guess):
         x_guess = L1+(L2*np.cos(-theta2))+L3*(np.cos(-theta2+theta3))+(L5+offset4)*(np.cos(-theta2+theta3-theta4))
         z_guess = h+L2*np.sin(-theta2)+L3*np.sin(-theta2+theta3)+(L5+offset4)*np.sin(-theta2+theta3-theta4)
         return np.array([x_guess - x, z_guess - z, 0])
-    """
-    def jacobian(thetas):
-        theta2, theta3, theta4 = thetas
-        xx = L2*np.sin(-theta2)+L3*np.sin(-theta2+theta3)+(L5+offset4)*np.sin(-theta2+theta3-theta4)
-        xy = -L3*np.sin(-theta2+theta3)-(L5+offset4)*np.sin(-theta2+theta3-theta4)
-        xz = (L5+offset4)*np.sin(-theta2+theta3-theta4)
-        yx = -L2*np.cos(-theta2)-L3*np.cos(-theta2+theta3)-(L5+offset4)*np.cos(-theta2+theta3-theta4)
-        yy = L3*np.cos(-theta2+theta3)+(L5+offset4)*np.cos(-theta2+theta3-theta4)
-        yz = -(L5+offset4)*np.cos(-theta2+theta3-theta4)
-        print(xx, xy, xz, yx, yy, yz)
-        return np.array([[xx, xy, xz],[yx, yy, yz]])
-    
-    def bounded_root_finding(guess, bounds, tol=0.01, max_iter=100):
-        
-        Newton-Raphson root-finding for theta2-4 with bounds
-        - guess: Starting point (x0,y0,z0)
-        - bounds: [(theta2min, theta2max),(theta3min, theta3max),(theta4min, theta4max)]
-        
-        thetas = np.array(guess, dtype=float)
-        for _ in range(max_iter):
-            F = func(thetas)
-            J = jacobian(thetas)
-
-            delta_theta, _, _, _ = np.linalg.lstsq(J, -F, rcond=None)
-
-            alpha = 1.0
-            new_thetas = thetas + alpha*delta_theta
-            for i in range(3):
-                min_b, max_b = bounds[i]
-                if new_thetas[i] < min_b or new_thetas[i] > max_b:
-                    alpha = min(alpha, (max_b - thetas[i]) / delta_theta[i] if delta_theta[i] > 0 else (min_b - thetas[i]) / delta_theta[i])
-            
-            thetas += alpha*delta_theta
-
-            if np.linalg.norm(F) < tol:
-                return thetas
-        print("Max iterations reached without convergence")
-        return None"
-    """
     def residual(thetas):
         return func(thetas)
     result = least_squares(residual, guess, bounds=np.array(bounds).T)
