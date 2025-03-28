@@ -245,7 +245,6 @@ void setup() {
   readEncoderStepper(&curPos3, A3, 0.0);    
   readEncoderStepper(&curPos4, A4, 0.0);
   encZeroes[0] = curPos1;
-  Serial.println(encZeroes[0]);
   encZeroes[1] = curPos2;
   encZeroes[2] = curPos3;
   encZeroes[3] = curPos4;
@@ -669,111 +668,84 @@ void correctSteppers(){
 }
 
 void runSteppers(){
-  readEncoderStepper(&curPos1, A1, fmod(previousDesPos1*20, 360.0)/20.0);
-  //Serial.println(fmod(previousDesPos1*20.0, 360.0));
+  float guess1 = fmod(previousDesPos1*20, 360.0)/20.0;
+  if (guess1 < 0) guess1 += 18;
+  float guess2 = fmod(previousDesPos2*50, 360.0)/50.0;
+  if (guess2 < 0) guess2 += 7.2;
+  float guess3 = fmod(previousDesPos3*20, 360.0)/20.0;
+  if (guess3 < 0) guess3 += 18;
+  float guess4 = fmod(previousDesPos4*20, 360.0)/20.0;
+  if (guess4 < 0) guess4 += 18;
+
+  readEncoderStepper(&curPos1, A1, guess1);
   previousDesPos1 = desPos1;
   theta1 = desPos1 - (rot1*(360/20) + curPos1); //find geared angle to move
-  Serial.println(curPos1);
-  Serial.println(theta1);
-  theta2 = desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2, fmod(desPos2*50.0, 360.0))); 
-  theta3 = desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3, fmod(desPos3*20.0, 360.0)));
-  theta4 = desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(&curPos4, A4, fmod(desPos4*20.0, 360.0)));
+
+  readEncoderStepper(&curPos2, A2, guess2);
+  previousDesPos2 = desPos2;
+  theta2 = desPos2 - (rot2*(360/50) + curPos2); //find geared angle to move
+
+  readEncoderStepper(&curPos3, A3, guess3);
+  previousDesPos3 = desPos3;
+  theta3 = desPos3 - (rot3*(360/20) + curPos3); //find geared angle to move
+
+  readEncoderStepper(&curPos4, A4, guess4);
+  previousDesPos4 = desPos4;
+  theta4 = desPos4 - (rot4*(360/20) + curPos4); //find geared angle to move
 
   if (theta1 > 180.0) theta1 -= 360.0;
   if (theta1 < -180.0) theta1 += 360.0;
-
-  Serial.println(rot1);
-  rot2 += floor((theta2*50.0)/360.0); //gives positive rots IS WRONG
-  rot3 += floor((theta3*20.0)/360.0);
-  rot4 += floor((theta4*20.0)/360.0);
+  if (theta2 > 180.0) theta2 -= 360.0;
+  if (theta2 < -180.0) theta2 += 360.0;
+  if (theta3 > 180.0) theta3 -= 360.0;
+  if (theta3 < -180.0) theta3 += 360.0;
+  if (theta4 > 180.0) theta4 -= 360.0;
+  if (theta4 < -180.0) theta4 += 360.0;
 
   if (!((rot1*(360/20) + curPos1 + theta1) < motor1UB && (rot1*(360/20) + curPos1 + theta1) > motor1LB)) { //if outside the bound change directions to the correct point 
-    Serial.println("hello ?");
     if (theta1 > 0){
       theta1 -= 360.0; 
     }
-    if (theta1 < 0) {
+    else{
       theta1 += 360.0;
     }
   }
-  rot1 = floor((rot1*(360/20) + curPos1 + theta1)*(20/360)); //find the next rotation value
+  rot1 = floor((rot1*(360/20) + curPos1 + theta1)*(20.0/360.0)); //find the next rotation value
 
-  if ((rot2 + fmod((theta2*50.0)/360.0, 360.0)) < motor2UB && (rot2 + fmod((theta2*50.0)/360.0, 360.0)) > motor2LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
-    if (theta2 >  180) {
-      rot2 -= floor((theta2*50.0)/360.0);
-      theta2 -= 360.0; 
-      rot2 += floor((theta2*50.0)/360.0);
-    }
-    if (theta2 < -180) {
-      rot2 -= floor((theta2*50.0)/360.0);
-      theta2 += 360.0;
-      rot2 += floor((theta2*50.0)/360.0);
-    }
-  } else { 
+  if (!((rot2*(360/50) + curPos2 + theta2) < motor2UB && (rot2*(360/50) + curPos2 + theta2) > motor2LB)) { //if outside the bound change directions to the correct point 
     if (theta2 > 0){
-      rot2 -= floor((theta2*50.0)/360.0);
       theta2 -= 360.0; 
-      rot2 += floor((theta2*50.0)/360.0);
     }
-    if (theta2 < 0) {
-      rot2 -= floor((theta2*50.0)/360.0);
+    else{
       theta2 += 360.0;
-      rot2 += floor((theta2*50.0)/360.0);
     }
   }
+  rot2 = floor((rot2*(360/20) + curPos2 + theta2)*(20.0/360.0)); //find the next rotation value
 
-  if ((rot3 + fmod((theta3*20.0)/360.0, 360.0)) < motor3UB && (rot3 + fmod((theta3*20.0)/360.0, 360.0)) > motor3LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
-    if (theta3 >  180) {
-      rot3 -= floor((theta3*20.0)/360.0);
-      theta3 -= 360.0; 
-      rot3 += floor((theta3*20.0)/360.0);
-    }
-    if (theta3 < -180) {
-      rot3 -= floor((theta3*20.0)/360.0);
-      theta3 += 360.0;
-      rot3 += floor((theta3*20.0)/360.0);
-    }
-  } else { //if outside the bound change directions to the correct point 
+  if (!((rot3*(360/20) + curPos3 + theta3) < motor3UB && (rot3*(360/20) + curPos3 + theta3) > motor3LB)) { //if outside the bound change directions to the correct point 
     if (theta3 > 0){
-      rot3 -= floor((theta3*20.0)/360.0);
       theta3 -= 360.0; 
-      rot3 += floor((theta3*20.0)/360.0);
     }
-    if (theta3 < 0) {
-      rot3 -= floor((theta3*20.0)/360.0);
+    else{
       theta3 += 360.0;
-      rot3 += floor((theta3*20.0)/360.0);
     }
   }
+  rot3 = floor((rot3*(360/20) + curPos3 + theta3)*(20.0/360.0)); //find the next rotation value
 
-  if ((rot4 + fmod((theta4*20.0)/360.0, 360.0)) < motor4UB && (rot4 + fmod((theta4*20.0)/360.0, 360.0)) > motor4LB) { //if inside the bounds after the move, use the shortest distance, otherwise proceed as normal
-    if (theta4 >  180) {
-      rot4 -= floor((theta4*20.0)/360.0);
-      theta4 -= 360.0; 
-      rot4 += floor((theta4*20.0)/360.0);
-    }
-    if (theta4 < -180) {
-      rot4 -= floor((theta4*20.0)/360.0);
-      theta4 += 360.0;
-      rot4 += floor((theta4*20.0)/360.0);
-    }
-  } else { //if outside the bound change directions to the correct point 
+  if (!((rot4*(360/20) + curPos4 + theta4) < motor4UB && (rot4*(360/20) + curPos4 + theta4) > motor4LB)) { //if outside the bound change directions to the correct point 
     if (theta4 > 0){
-      rot4 -= floor((theta4*20.0)/360.0);
       theta4 -= 360.0; 
-      rot4 += floor((theta4*20.0)/360.0);
     }
-    if (theta4 < 0) {
-      rot4 -= floor((theta4*20.0)/360.0);
+    else{
       theta4 += 360.0;
-      rot4 += floor((theta4*20.0)/360.0);
     }
   }
+  rot4 = floor((rot4*(360/20) + curPos4 + theta4)*(20.0/360.0)); //find the next rotation value
 
-  digitalWrite(DIR_PIN1, (theta1 >= 0) ? HIGH : LOW);
-  digitalWrite(DIR_PIN2, (theta2 >= 0) ? HIGH : LOW);
-  digitalWrite(DIR_PIN3, (theta3 >= 0) ? HIGH : LOW);
-  digitalWrite(DIR_PIN4, (theta4 >= 0) ? HIGH : LOW);
+  digitalWrite(DIR_PIN1, (theta1 >= 0) ? LOW : HIGH);
+  digitalWrite(DIR_PIN2, (theta2 >= 0) ? LOW : HIGH);
+  digitalWrite(DIR_PIN3, (theta3 >= 0) ? LOW : HIGH);
+  digitalWrite(DIR_PIN4, (theta4 >= 0) ? LOW : HIGH);
   steps[0] = short((abs(theta1)*20.0)/1.8); 
   steps[1] = short((abs(theta2)*50.0)/1.8); 
   steps[2] = short((abs(theta3)*20.0)/1.8);
@@ -808,7 +780,6 @@ void runSteppers(){
     if (steps[2] > 0) motor3Running = true;
     if (steps[3] > 0) motor4Running = true;
   }
-  Serial.println(steps[0]);
   Serial.println("Motors started.");
   checkSteppers = true;
 }
@@ -816,65 +787,70 @@ void runSteppers(){
 void updateDCs(){
   float newPos5;
   float newPos6;
-  readEncoderDC(newPos5, newPos6);
+  readEncoderDC(newPos5, newPos6, desPos5, desPos6);
+  
   if(newPos5 != 0){
-    passZero5 = ((newPos5>=0 != currPos5>=0) ? true : false); //If we switched signs, passZero is true
+    passZero5 = ((abs(abs(newPos5) - abs(currPos5)) > 100) ? true : false); //If we switched signs, passZero is true
   }
   if(newPos6 != 0){
-    passZero6 = ((newPos6>=0 != currPos6>=0) ? true : false);
+    passZero6 = ((abs(abs(newPos6) - abs(currPos6)) > 100) ? true : false);
   }
   
   if(passZero5){
-    (newPos5>=0) ? (rot5 -= 1) : (rot5 += 1);
+    (newPos5>currPos5) ? (rot5 -= 1) : (rot5 += 1);
   }
   if(passZero6){
-    (newPos6>=0) ? (rot6 -= 1) : (rot6 += 1);
+    (newPos6>currPos6) ? (rot6 -= 1) : (rot6 += 1);
   }
+  
   currPos5 = newPos5;
   currPos6 = newPos6;
   motor5Running = true; //End conditions
   motor6Running = true;
-  error5 = desPos5 - currPos5; //position error
-  if (error5 > 180) error5 -= 360;  // Ensure shortest path
-  if (error5 < -180) error5 += 360;
-  if(error5>0){ //If we're rotating CW
-    if(currPos5+error5 >= 360){ //If we pass zero
-      if(rot5>0) error5 -= 360; //If passing zero is not ok, make the error the other way
-    }
-  }else{ //If we're rotating CCW
-    if(currPos5+error5 <= 0){ //If we pass zero
-      if(rot5<-1) error5 += 360; //If passing zero is not ok, make the error the other way
-    }
-  }
 
-  error6 = desPos6-currPos6; //position error
-  if (error6 > 180) error6 -= 360;  // Ensure shortest path
-  if (error6 < -180) error6 += 360;
-  if(error6>0){ //If we're rotating CW
-    if(currPos6+error6 >= 360){ //If we pass zero
-      if(rot6>0) error6 -= 360; //If passing zero is not ok, make the error the other way
+  error5 = desPos5 - currPos5; //position error
+  if (error5 > 180.0) error5 -= 360.0;  // Ensure shortest path
+  if (error5 < -180.0) error5 += 360.0;
+  
+  if(error5>0){ //If we're rotating CW
+    if(currPos5+error5 >= 360.0){ //If we pass zero
+      if(rot5>1) error5 -= 360.0; //If passing zero is not ok, make the error the other way
     }
   }else{ //If we're rotating CCW
-    if(currPos6+error6 <= 0){ //If we pass zero
-      if(rot6<-1) error6 += 360; //If passing zero is not ok, make the error the other way
+    if(currPos5+error5 <= 0.0){ //If we pass zero
+      if(rot5<-1) error5 += 360.0; //If passing zero is not ok, make the error the other way
     }
   }
+  
+  error6 = desPos6-currPos6; //position error
+  if (error6 > 180.0) error6 -= 360.0;  // Ensure shortest path
+  if (error6 < -180.0) error6 += 360.0;
+  
+  if(error6>0.0){ //If we're rotating CW
+    if(currPos6+error6 >= 360.0){ //If we will pass zero
+      if(rot6>1) error6 -= 360.0;//If passing zero is not ok, make the error the other way
+    }
+  }else{ //If we're rotating CCW
+    if(currPos6+error6 <= 0.0){ //If we pass zero
+      if(rot6<-1) error6 += 360.0; //If passing zero is not ok, make the error the other way
+    }
+  }
+  
   //End conditions
-  if (abs(error5) < 5) {
+  if (abs(error5) < 5.0) {
     digitalWrite(IN1, 1);
     digitalWrite(IN2, 1);
     currPWM5 = 0;
     analogWrite(pwmPin5, abs(currPWM5));
     motor5Running = false;
   }
-  if (abs(error6) < 10) {
+  if (abs(error6) < 10.0) {
     digitalWrite(IN3, 1);
     digitalWrite(IN4, 1);
     currPWM6 = 0;
     analogWrite(pwmPin6, abs(currPWM6)); //CHECK
     motor6Running = false;
   }
-  
   //Only adjust motor 5 if it hasn't hit the target yet
   if(motor5Running){
     currPWM5 = Ki5*error5;
@@ -891,7 +867,7 @@ void updateDCs(){
     }
   }
 
-  //Only adjust motor 2 if it hasn't hit the target yet
+  //Only adjust motor 6 if it hasn't hit the target yet
   if(motor6Running){
     currPWM6 = Ki6*error6;
     if (currPWM6 >= 255) {currPWM6 = 255;}
@@ -917,25 +893,32 @@ int calcOCRA(float freq, int prescale){
 }
 
 float readEncoderStepper(float* currentPos, int analogPin, float guess){
+  float checkVal;
   switch (analogPin) {
       case A1:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[0]; //SIGNED VALUE (AND IT SHOULD BE)
-        float checkVal = (abs(*currentPos - guess)*20.0); //MAKE SURE THAT currentPos AND guess are both between 0 and 18 when checking them, BUT THEY MUST RETURN TO THEIR ACTUAL VALUE AFTER THIS
-        //if (*currentPos < 0) float temp = *currentPos + 18.00; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[0]; //
+        if (*currentPos < 0) *currentPos += 18;
+        checkVal = (abs(*currentPos - guess)*20.0); //MAKE SURE THAT currentPos AND guess are both between 0 and 18 when checking them, BUT THEY MUST RETURN TO THEIR ACTUAL VALUE AFTER THIS
         if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess; //compare TEMP to guess and then edit current pos
         break;
       case A2:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; 
-        if ((abs(*currentPos - guess)*50.0))
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
+        if (*currentPos < 0) *currentPos += 7.2;
+        checkVal = (abs(*currentPos - guess)*50.0);
+        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
         break;
       case A3:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[2];
-        if ((abs(*currentPos - guess)*20.0))
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[2]; //
+        if (*currentPos < 0) *currentPos += 18;
+        checkVal = (abs(*currentPos - guess)*20.0);
+        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
         break;
       case A4:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[3];
-        if ((abs(*currentPos - guess)*20.0))
-        break;  
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[3]; //
+        if (*currentPos < 0) *currentPos += 18;
+        checkVal = (abs(*currentPos - guess)*20.0);
+        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
+        break;
   }
 }
 
@@ -946,9 +929,19 @@ void print_motor_info(){
   Serial.println(String(currPos6) + " " + String(desPos6) + " " + String(error6) + " " + String (currPWM6));
 }
 
-float readEncoderDC(float &num1, float &num2){
+float readEncoderDC(float &num1, float &num2, float guess1, float guess2){
+  float checkVal1;
+  float checkVal2;
   int raw_value = analogRead(encPin5);
   num1 = (raw_value/1023.0)*(5/3.3)*(360.0);
+  if (guess1 < 0) guess1 += 360;
+  checkVal1 = abs(num1 - guess1);
+  if (checkVal1 < 1.8 || checkVal1 > 358.2) num1 = guess1;
+  if (num1 == 0.0) num1+=0.01;
   int raw_value2 = analogRead(encPin6);
   num2 = (raw_value2/1023.0)*(5/3.3)*(360.0);
+  if (guess2 < 0) guess2 += 360;
+  checkVal2 = abs(num2 - guess2);
+  if (checkVal2 < 1.8 || checkVal2 > 358.2) num2 = guess2;
+  if (num2 == 0.0) num2 += 0.01;
 }
