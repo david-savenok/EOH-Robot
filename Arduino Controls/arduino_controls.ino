@@ -427,49 +427,36 @@ bool handleInstructionSet(char** instruction_set) {
         while (in_token) {
           (!motor1Running && !motor2Running && !motor3Running && !motor4Running) ? steppersOff = true : steppersOff = false;
           if (steppersOff) {
-            //Serial.println("MS");
             handleMoveCommand(curr_data.command_start, curr_data.command_end);
-            //Serial.println("ME");
             runSteppers(); //SHOULD TAKE DESPOS1-4, AND SHOULD NOT BE GLOBAL VARIABLES || ALSO ADD A FLAG TO SIGNAL WHEN THIS IS COMPLETE AND CORRECT STEPPERS NEEDS TO RUN
-            Serial.println(steps[0]);
-            Serial.println(steps[1]);
-            Serial.println(steps[2]);
-            Serial.println(steps[3]);
           }
           // Motor stuff
           if (count1 >= steps[0]){
-            //Serial.println("M1");
             motor1Running = false;
             count1 = 0;
           }
           if (count2 >= steps[1]){
-            //Serial.println("M2");
             motor2Running = false;
             count2 = 0;
           }
           if (count3 >= steps[2]){
-            //Serial.println("M3");
             motor3Running = false;
             count3 = 0;
           }
           if (count4 >= steps[3]){
-            //Serial.println("M4");
             motor4Running = false;
             count4 = 0;
           }
           
           if (steppersOff && checkSteppers) {
-            //Serial.println(steps[0]);
-            //correctSteppers();
             checkSteppers = false;
           }
-          /*
+          
           if (timePassed >= loopTime) {
             updateDCs();
-            Serial.println("DC");
             //print_motor_info(); //For debugging
           }
-          */
+          
         }
           //make sure to set desiredAngles after you move in case the next command is not a move command
     }
@@ -560,7 +547,6 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
         */
          // New line after each group
         desPos1 = group[0];
-        //Serial.println(group[0]);
         desPos2 = group[1];
         desPos3 = group[2];
         desPos4 = group[3];
@@ -624,66 +610,6 @@ void maintainDCMotors(desiredAngles) {
   //must mantain the desired position
 }
 */
-
-void correctSteppers(){
-  Serial.println("called");
-  readEncoderStepper(&curPos1, A1, fmod(desPos1*20.0, 360.0));
-  theta1 = desPos1 - (((rot1*360.0)/20.0) + curPos1); //find relative angle to move
-  theta2 = 0;//desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2)); //DOUBLE CHECK FOR FMOD
-  theta3 = 0;//desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3));
-  theta4 = 0;//desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(&curPos4, A4));
-  if (abs(theta1) > 1.8) {
-    digitalWrite(DIR_PIN1, (theta1 >= 0) ? HIGH : LOW);
-    steps[0] = short((abs(theta1)*20.0)/1.8);   
-  } else steps[0] = 0;
-  if (abs(theta2) > 1.8) {
-    digitalWrite(DIR_PIN2, (theta2 >= 0) ? HIGH : LOW);
-    steps[1] = short((abs(theta2)*20.0)/1.8);   
-  } else steps[1] = 0;
-  if (abs(theta3) > 1.8) {
-    digitalWrite(DIR_PIN3, (theta3 >= 0) ? HIGH : LOW);
-    steps[2] = short((abs(theta3)*20.0)/1.8);   
-  } else steps[2] = 0;
-  if (abs(theta4) > 1.8) {
-    digitalWrite(DIR_PIN4, (theta4 >= 0) ? HIGH : LOW);
-    steps[3] = short((abs(theta4)*20.0)/1.8);   
-  } else steps[3] = 0;
-
-  mostSteps = steps[0];
-  mostStepsIndex = 0;
-  for (int i=1; i<4; i++){
-    if (steps[i] > mostSteps){
-      mostSteps = steps[i];
-      mostStepsIndex = i;
-    }
-  }
-
-  frequencies[mostStepsIndex] = 2000;
-  timescale = mostSteps/frequencies[mostStepsIndex];
-
-  if (timescale != 0){
-    for (int i = 0; i<4; i++){
-      if (i != mostStepsIndex){
-        if (steps[i] != 0){
-          frequencies[i] = steps[i]/timescale;
-        } else frequencies[i] = 2000;
-      }
-    }
-    noInterrupts();
-    OCR1A = calcOCRA(frequencies[0], 32);
-    OCR3A = calcOCRA(frequencies[1], 32);
-    OCR4A = calcOCRA(frequencies[2], 32); 
-    OCR5A = calcOCRA(frequencies[3], 32);
-    interrupts();
-    if (steps[0] > 0) motor1Running = true;
-    if (steps[1] > 0) motor2Running = true;
-    if (steps[2] > 0) motor3Running = true;
-    if (steps[3] > 0) motor4Running = true;
-  }
-  Serial.println("Motors moving to correction.");
-  Serial.println(steps[0]);
-  checkSteppers = false;
-}
 
 void runSteppers(){
   float guess1 = fmod(previousDesPos1*20, 360.0)/20.0;
@@ -799,11 +725,6 @@ void runSteppers(){
     if (steps[3] > 0) motor4Running = true;
   }
   Serial.println("Motors started.");
-  Serial.println(desPos1);
-  Serial.println(desPos2);
-  Serial.println(desPos3);
-  Serial.println(desPos4);
-  //checkSteppers = true;
 }
 
 void updateDCs(){
@@ -888,7 +809,6 @@ void updateDCs(){
       analogWrite(pwmPin5,abs(currPWM5));
     }
   }
-
   //Only adjust motor 6 if it hasn't hit the target yet
   if(motor6Running){
     currPWM6 = Ki6*error6;
@@ -924,10 +844,10 @@ float readEncoderStepper(float* currentPos, int analogPin, float guess){
         if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess; //compare TEMP to guess and then edit current pos
         break;
       case A2:
-        *currentPos = -40;//((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
-        //if (*currentPos < 0) *currentPos += 7.2;
-        //checkVal = (abs(*currentPos - guess)*50.0);
-        //if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
+        if (*currentPos < 0) *currentPos += 7.2;
+        checkVal = (abs(*currentPos - guess)*50.0);
+        if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
         break;
       case A3:
         *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[2]; //

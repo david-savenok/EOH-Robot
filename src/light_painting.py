@@ -93,9 +93,8 @@ def i2space(image_point, image):
         z = -real_height*(iy/dims[1]) + (h + 9)*(dims[0]/dims[1])
     return [float(x), float(z)]
 
-def lightPaintingIK(x,z, guess):
-    bounds = [(-3*np.pi/4,np.pi/4), (-3*np.pi/4, 3*np.pi/4), (-2*np.pi, 2*np.pi)]
-    
+def lightPaintingIK(x,z, guess, weight_theta2=0.000):
+    bounds = [(-41*np.pi/36,5*np.pi/36,), (-np.pi, np.pi), (-np.pi, np.pi)]
     def func(thetas):
         theta2, theta3, theta4 = thetas
         x_guess = L1+(L2*np.cos(-theta2))+L3*(np.cos(-theta2+theta3))+(L5+offset4)*(np.cos(-theta2+theta3-theta4))
@@ -175,6 +174,7 @@ def create_command(theta_list_set):
             command = command[:-1]
             command += "*/L*1*"
         else:
+            command += "*/M*0,0,0,0,0,0"
             command += "*/E*X,"
             for theta in home_position:
                 command += str(round(theta, 2))
@@ -185,4 +185,6 @@ def create_command(theta_list_set):
 
 def call_test():
     return create_command(theta_list_set) + '/'
-print(call_test())
+
+call_test()
+#print(call_test())
