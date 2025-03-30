@@ -22,8 +22,8 @@
 
 //Joint limits
 
-float motor1LB = -360.0; //units of full rotations
-float motor1UB =  360.0;
+float motor1LB = -360; //units of degrees
+float motor1UB =  360;
 
 float motor2LB = -25.0;
 float motor2UB =  205.0;
@@ -401,6 +401,7 @@ void correctSteppers(){
 }
 
 void runSteppers(){
+  Serial.println(curPos1);
   float guess1 = fmod(previousDesPos1*20, 360.0)/20.0;
   if (guess1 < 0) guess1 += 18;
   float guess2 = fmod(previousDesPos2*50, 360.0)/50.0;
@@ -515,6 +516,7 @@ void runSteppers(){
   }
   Serial.println("Motors started.");
   checkSteppers = true;
+  Serial.println(steps[0]);
 }
 
 void updateDCs(){
@@ -632,7 +634,7 @@ float readEncoderStepper(float* currentPos, int analogPin, float guess){
         *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[0]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0); //MAKE SURE THAT currentPos AND guess are both between 0 and 18 when checking them, BUT THEY MUST RETURN TO THEIR ACTUAL VALUE AFTER THIS
-        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess; //compare TEMP to guess and then edit current pos
+        if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess; //compare TEMP to guess and then edit current pos
         break;
       case A2:
         *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
