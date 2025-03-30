@@ -702,7 +702,7 @@ void runSteppers(){
       mostStepsIndex = i;
     }
   }
-  frequencies[mostStepsIndex] = 8000;
+  frequencies[mostStepsIndex] = 1108; //Up time 2 microseconds, down time 900 microseconds, total period 902 microseconds
   timescale = mostSteps/frequencies[mostStepsIndex];
 
   if (timescale != 0){
@@ -710,7 +710,7 @@ void runSteppers(){
       if (i != mostStepsIndex){
         if (steps[i] != 0) {
           frequencies[i] = steps[i]/timescale;
-        } else frequencies[i] = 8000;
+        } else frequencies[i] = 1108;
       } 
     }
     noInterrupts();
