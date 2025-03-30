@@ -93,6 +93,7 @@ bool start_comms;
 
 char* move_command = NULL;
 bool in_token = false;
+bool start_parse = true;
 
 //Joint limits
 
@@ -102,8 +103,8 @@ float motor1UB =  360.0;
 float motor2LB = -25.0;
 float motor2UB =  205.0;
 
-float motor3LB = -145.0;
-float motor3UB =  145.0;
+float motor3LB = -360.0;
+float motor3UB =  360.0;
 
 float motor4LB = -720.0;
 float motor4UB =  720.0;
@@ -258,11 +259,11 @@ void setup() {
   
   // Set Timer1 in CTC (Clear Timer on Compare Match) mode
   TCCR1B |= (1 << WGM12);  // CTC Mode
-  TCCR1B |= (1 << CS10) | (1 << CS11);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
+  TCCR1B |= (1 << CS10) | (1<< CS11);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR1A = 1000; //init
-  OCR1B = 499;
+  OCR1A = 249; //init
+  OCR1B = 4;
   // Enable Timer1 Compare Match A and B interrupts
   TIMSK1 |= (1 << OCIE1A) | (1<< OCIE1B);
   //-----------------------------------------------------------------------------------------------------
@@ -272,11 +273,11 @@ void setup() {
   
   // Set Timer3 in CTC (Clear Timer on Compare Match) mode
   TCCR3B |= (1 << WGM32);  // CTC Mode
-  TCCR3B |= (1<<CS30) | (1 << CS31);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
+  TCCR3B |= (1 << CS30) | (1<< CS31);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR3A = 1000; //init
-  OCR3B = 499;
+  OCR3A = 249; //init
+  OCR3B = 4;
   // Enable Timer3 Compare Match A and B interrupts
   TIMSK3 |= (1 << OCIE3A) | (1<< OCIE3B);
   //-----------------------------------------------------------------------------------------------------
@@ -286,11 +287,11 @@ void setup() {
   
   // Set Timer3 in CTC (Clear Timer on Compare Match) mode
   TCCR4B |= (1 << WGM42);  // CTC Mode
-  TCCR4B |= (1<<CS40) | (1 << CS41);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
+  TCCR4B |= (1 << CS40) | (1<<CS41);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR4A = 1000; //init
-  OCR4B = 499;
+  OCR4A = 249; //init
+  OCR4B = 4;
   // Enable Timer4 Compare Match A and B interrupts
   TIMSK4 |= (1 << OCIE4A) | (1<< OCIE4B);
   //-----------------------------------------------------------------------------------------------------
@@ -300,11 +301,11 @@ void setup() {
   
   // Set Timer3 in CTC (Clear Timer on Compare Match) mode
   TCCR5B |= (1 << WGM52);  // CTC Mode
-  TCCR5B |= (1<<CS50) | (1 << CS51);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
+  TCCR5B |= (1 << CS50) | (1<< CS51);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR5A = 1000; //init
-  OCR5B = 499;
+  OCR5A = 249; //init
+  OCR5B = 4;
   // Enable Timer5 Compare Match A and B interrupts
   TIMSK5 |= (1 << OCIE5A) | (1<< OCIE5B);
   //-----------------------------------------------------------------------------------------------------
@@ -422,39 +423,53 @@ bool handleInstructionSet(char** instruction_set) {
     else if (curr_data.instruction_type == 'M') { //if the instruction is a move from point A to point B command then move the motors from A to B
         Serial.println("M");
         in_token = true;
+        start_parse = true;
         while (in_token) {
           (!motor1Running && !motor2Running && !motor3Running && !motor4Running) ? steppersOff = true : steppersOff = false;
-          if (steppersOff && !checkSteppers) { 
+          if (steppersOff) {
+            //Serial.println("MS");
             handleMoveCommand(curr_data.command_start, curr_data.command_end);
+            //Serial.println("ME");
             runSteppers(); //SHOULD TAKE DESPOS1-4, AND SHOULD NOT BE GLOBAL VARIABLES || ALSO ADD A FLAG TO SIGNAL WHEN THIS IS COMPLETE AND CORRECT STEPPERS NEEDS TO RUN
+            Serial.println(steps[0]);
+            Serial.println(steps[1]);
+            Serial.println(steps[2]);
+            Serial.println(steps[3]);
           }
-
           // Motor stuff
           if (count1 >= steps[0]){
+            //Serial.println("M1");
             motor1Running = false;
             count1 = 0;
           }
           if (count2 >= steps[1]){
+            //Serial.println("M2");
             motor2Running = false;
             count2 = 0;
           }
           if (count3 >= steps[2]){
+            //Serial.println("M3");
             motor3Running = false;
             count3 = 0;
           }
           if (count4 >= steps[3]){
+            //Serial.println("M4");
             motor4Running = false;
             count4 = 0;
           }
+          
           if (steppersOff && checkSteppers) {
             //Serial.println(steps[0]);
             //correctSteppers();
             checkSteppers = false;
           }
+          /*
           if (timePassed >= loopTime) {
             updateDCs();
+            Serial.println("DC");
             //print_motor_info(); //For debugging
           }
+          */
         }
           //make sure to set desiredAngles after you move in case the next command is not a move command
     }
@@ -509,15 +524,16 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
     MoveCommand result;
     //parse the A to B command 
     //Return the STARTING POINT, and an array of SEGMENTED MOVEMENTS
-
+    Serial.println("I");
     // Array to hold a group of 6 floats
     float group[6];
     int groupIndex = 0;
 
     // Get the first token (split by comma)
     char* token = NULL;
-    if (!in_token) {
+    if (start_parse) {
       token = strtok(command_start, ",*");
+      start_parse = false;
     }
     else {
       token = strtok(NULL, ",*");
@@ -541,8 +557,10 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
         }
 
         Serial.println();
-        */ // New line after each group
+        */
+         // New line after each group
         desPos1 = group[0];
+        //Serial.println(group[0]);
         desPos2 = group[1];
         desPos3 = group[2];
         desPos4 = group[3];
@@ -640,7 +658,7 @@ void correctSteppers(){
     }
   }
 
-  frequencies[mostStepsIndex] = 1000;
+  frequencies[mostStepsIndex] = 2000;
   timescale = mostSteps/frequencies[mostStepsIndex];
 
   if (timescale != 0){
@@ -648,7 +666,7 @@ void correctSteppers(){
       if (i != mostStepsIndex){
         if (steps[i] != 0){
           frequencies[i] = steps[i]/timescale;
-        } else frequencies[i] = 1000;
+        } else frequencies[i] = 2000;
       }
     }
     noInterrupts();
@@ -758,7 +776,7 @@ void runSteppers(){
       mostStepsIndex = i;
     }
   }
-  frequencies[mostStepsIndex] = 1000;
+  frequencies[mostStepsIndex] = 8000;
   timescale = mostSteps/frequencies[mostStepsIndex];
 
   if (timescale != 0){
@@ -766,7 +784,7 @@ void runSteppers(){
       if (i != mostStepsIndex){
         if (steps[i] != 0) {
           frequencies[i] = steps[i]/timescale;
-        } else frequencies[i] = 1000;
+        } else frequencies[i] = 8000;
       } 
     }
     noInterrupts();
@@ -781,7 +799,11 @@ void runSteppers(){
     if (steps[3] > 0) motor4Running = true;
   }
   Serial.println("Motors started.");
-  checkSteppers = true;
+  Serial.println(desPos1);
+  Serial.println(desPos2);
+  Serial.println(desPos3);
+  Serial.println(desPos4);
+  //checkSteppers = true;
 }
 
 void updateDCs(){
@@ -899,25 +921,25 @@ float readEncoderStepper(float* currentPos, int analogPin, float guess){
         *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[0]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0); //MAKE SURE THAT currentPos AND guess are both between 0 and 18 when checking them, BUT THEY MUST RETURN TO THEIR ACTUAL VALUE AFTER THIS
-        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess; //compare TEMP to guess and then edit current pos
+        if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess; //compare TEMP to guess and then edit current pos
         break;
       case A2:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
-        if (*currentPos < 0) *currentPos += 7.2;
-        checkVal = (abs(*currentPos - guess)*50.0);
-        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
+        *currentPos = -40;//((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
+        //if (*currentPos < 0) *currentPos += 7.2;
+        //checkVal = (abs(*currentPos - guess)*50.0);
+        //if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
         break;
       case A3:
         *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[2]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0);
-        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
+        if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
         break;
       case A4:
         *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[3]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0);
-        if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
+        if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
         break;
   }
 }

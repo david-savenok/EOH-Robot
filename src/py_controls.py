@@ -6,7 +6,7 @@ import time
 import light_painting 
 
 # Replace with your Arduino's actual port (e.g., check in Arduino IDE)
-port = '/dev/cu.usbmodem1101'  
+port = '/dev/cu.usbmodem101'  
 baud_rate = 115200  # Must match the Arduino's Serial.begin() value
 buffer_size = 1498
 
@@ -31,13 +31,13 @@ def fillBuffers(data):
         else:
             
             buffers[current_buffer] += 'Q' + '\x00'
-            print(buffers[current_buffer])
+            #print(buffers[current_buffer])
             #print('\n\n\n')
             buffers.append("")
             current_buffer = current_buffer + 1
     
     buffers[current_buffer] += 'Q' + '\x00'
-    print(buffers[current_buffer])
+    #print(buffers[current_buffer])
     return buffers
 
 
@@ -51,8 +51,8 @@ try:
 
     #print(bytes(light_painting.call_test(), "utf-8"))
     data = light_painting.call_test()
-    print(data)
-    print("\n\n\n")
+    #print(data)
+    #print("\n\n\n")
     buffers = fillBuffers(data)
     
     current_buffer = 0
@@ -63,10 +63,6 @@ try:
     #print(buffers[0])
     #print('\n\n\n')
     #print(buffers[1])
-
-    
-    #user_input = input()
-
     
     ret_val = ser.readline().decode('utf-8').strip()
     print(ret_val + '\n')
