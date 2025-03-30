@@ -54,13 +54,13 @@ def generate_contours(image):
         contour_colors = []
         for point in contour:
             point = point[0]#Points seem to be double wrapped for some reason
-            print(point)
+            #print(point)
             numbers = image[point[1], point[0]]
-            print(numbers)
+            #print(numbers)
             contour_colors.append(numbers)
 
         colors.append(contour_colors)
-
+    print(colors)
     #image_with_contours = src.copy()
 
     #cv2.imshow("Source", src)
@@ -120,7 +120,7 @@ def lightPaintingIK(x,z, guess, weight_theta2=0.000):
     return result.x
 
 
-image_file = r"src/testImage3.jpeg"
+image_file = r"src/testImage4.jpeg"
 max_height = 1024
 max_width = 1024
 image = cv2.imread(image_file)
@@ -140,7 +140,7 @@ ax.set_xlabel("x")
 ax.set_ylabel("z")
 ax.set_aspect('equal')
 ax.grid(True) 
-#plt.show()
+plt.show()
 
 #Turn these into T vectors
 theta_list_set = []
