@@ -323,8 +323,12 @@ void parseString(){
   int commaLoc2 = -1;
   int commaLoc3 = -1;
   int commaLoc4 = -1;
+  int commaLoc5 = -1;
+  int commaLoc6 = -1;
   desPos1 = (command.substring(0, commaLoc1)).toFloat();
   desPos2 = desPos1;
+  desPos3 = desPos1;
+  desPos4 = desPos1;
   desPos5 = desPos1;
   desPos6 = desPos1;
   if (commaLoc1 != -1){
@@ -332,11 +336,20 @@ void parseString(){
     commaLoc2 = command.indexOf(',', commaLoc1+1);
   }
   if (commaLoc2 != -1){
-    desPos5 = (command.substring(commaLoc2+1, commaLoc3)).toFloat();
+    desPos3 = (command.substring(commaLoc2+1, commaLoc3)).toFloat();
     commaLoc3 = command.indexOf(',', commaLoc2+1);
   }
   if (commaLoc3 != -1){
-    desPos6 = (command.substring(commaLoc3+1, commaLoc4)).toFloat();
+    desPos4 = (command.substring(commaLoc3+1, commaLoc4)).toFloat();
+    commaLoc4 = command.indexOf(',', commaLoc3+1);
+  }
+  if (commaLoc4 != -1){
+    desPos5 = (command.substring(commaLoc4+1, commaLoc5)).toFloat();
+    commaLoc5 = command.indexOf(',', commaLoc4+1);
+  }
+  if (commaLoc5 != -1){
+    desPos6 = (command.substring(commaLoc5+1, commaLoc6)).toFloat();
+    commaLoc6 = command.indexOf(',', commaLoc5+1);
   }
 }
 

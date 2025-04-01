@@ -47,7 +47,21 @@ def generate_contours(image):
 
     min_contour_area = 100  # Adjust this value
     filtered_contours = [cnt for cnt in simplified_contours if cv2.contourArea(cnt) > min_contour_area]
-    image_with_contours = src.copy()
+
+    colors = []
+    #print(filtered_contours, type(filtered_contours))
+    for contour in filtered_contours:
+        contour_colors = []
+        for point in contour:
+            point = point[0]#Points seem to be double wrapped for some reason
+            #print(point)
+            numbers = image[point[1], point[0]]
+            #print(numbers)
+            contour_colors.append(numbers)
+
+        colors.append(contour_colors)
+    print(colors)
+    #image_with_contours = src.copy()
 
     #cv2.imshow("Source", src)
     #cv2.drawContours(image_with_contours, filtered_contours, -1, (0, 255, 0), 2) 
@@ -56,7 +70,7 @@ def generate_contours(image):
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
     
-    return filtered_contours
+    return filtered_contours, colors
 
 def resize_image(image, max_width, max_height):
     # Load the image
@@ -106,12 +120,12 @@ def lightPaintingIK(x,z, guess, weight_theta2=0.000):
     return result.x
 
 
-image_file = r"src/testImage3.jpeg"
+image_file = r"src/testImage4.jpeg"
 max_height = 1024
 max_width = 1024
 image = cv2.imread(image_file)
 resized_image = resize_image(image, max_height, max_width)
-contours = generate_contours(resized_image)
+contours, contour_colors = generate_contours(resized_image)
 point_set_set_3D = []
 for contour in contours:
     point_set_set_3D.append([i2space(point[0], resized_image) for point in contour])
@@ -126,7 +140,7 @@ ax.set_xlabel("x")
 ax.set_ylabel("z")
 ax.set_aspect('equal')
 ax.grid(True) 
-#plt.show()
+plt.show()
 
 #Turn these into T vectors
 theta_list_set = []
