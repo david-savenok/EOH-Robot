@@ -28,6 +28,10 @@ using namespace std;
 #define encPin5 A5
 #define encPin6 A6
 
+#define RED 2 // LED pin red
+#define GREEN 4 // LED pin green
+#define BLUE 6 // LED pin blue
+
 //-------------------STRUCTURES----------------------------------------
 typedef struct Buffer {
   char name;
@@ -199,6 +203,14 @@ int rot6 = 0;
 float Ki5 = 25;
 float Ki6 = 3.8;
 
+int redValue = 0;
+int greenValue = 0;
+int blueValue = 0;
+
+int targetRed = 0;
+int targetGreen = 0;
+int targetBlue = 0;
+
 //------------------------SETUP----------------------------------------
 void setup() {
   //clawServo.attach(CHOOSE A PIN PLEASE);
@@ -211,6 +223,12 @@ void setup() {
   bufA->buf = malloc(1500);
   bufB->buf = malloc(1500);
   start_comms = true;
+
+  // Set up light pins
+  pinMode(RED, OUTPUT);
+  pinMode(GREEN, OUTPUT);
+  pinMode(BLUE, OUTPUT);
+  fadeToTargetColor();
 
   // Set STEP and DIR pins as outputs
   pinMode(STEP_PIN1, OUTPUT);
@@ -464,6 +482,7 @@ bool handleInstructionSet(char** instruction_set) {
         Serial.print("C");
     }
     else if (curr_data.instruction_type == 'L') {
+
         Serial.print("L");
     }
     else if (curr_data.instruction_type == 'P') {
@@ -505,6 +524,35 @@ Instruction parseInstructionSet(char** instruction_set) {
   }
   result.instruction_type = instruction_type;
   return result;
+}
+
+void parseRGBCommand(char* command_start, char* command_end) {
+  int values[3] = {0};
+  int index = 0;
+  int num = 0;
+  
+  for (char* ptr = command_start; ptr < command_end; ++ptr) {
+    if (*ptr >= '0' && *ptr <= '9') {
+      num = num * 10 + (*ptr - '0');
+    } else if (*ptr == '-' || ptr == command_end - 1) {
+      if (ptr == command_end - 1 && *ptr >= '0' && *ptr <= '9') {
+        num = num * 10 + (*ptr - '0');
+      }
+      if (index < 3) {
+        values[index++] = num;
+      }
+      num = 0;
+    }
+  }
+  
+  if (index == 3) {
+    targetRed = values[0];
+    targetGreen = values[1];
+    targetBlue = values[2];
+    fadeToTargetColor();
+  } else {
+    Serial.println("Invalid command format");
+  }
 }
 
 MoveCommand handleMoveCommand(char* command_start, char* command_end) {
@@ -886,4 +934,29 @@ float readEncoderDC(float &num1, float &num2, float guess1, float guess2){
   checkVal2 = abs(num2 - guess2);
   if (checkVal2 < 1.8 || checkVal2 > 358.2) num2 = guess2;
   if (num2 == 0.0) num2 += 0.01;
+}
+
+void fadeToTargetColor() {
+  while (redValue != targetRed || greenValue != targetGreen || blueValue != targetBlue) {
+    if (redValue != targetRed) {
+      redValue += (targetRed > redValue) ? 1 : -1;
+    }
+
+    if (greenValue != targetGreen) {
+      greenValue += (targetGreen > greenValue) ? 1 : -1;
+    }
+
+    if (blueValue != targetBlue) {
+      blueValue += (targetBlue > blueValue) ? 1 : -1;
+    }
+
+    analogWrite(RED, redValue);
+    analogWrite(GREEN, greenValue);
+    analogWrite(BLUE, blueValue);
+
+    Serial.print("Red: "); Serial.println(redValue);
+    Serial.print("Green: "); Serial.println(greenValue);
+    Serial.print("Blue: "); Serial.println(blueValue);
+  
+  }
 }
