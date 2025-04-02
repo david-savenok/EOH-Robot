@@ -482,7 +482,7 @@ bool handleInstructionSet(char** instruction_set) {
         Serial.print("C");
     }
     else if (curr_data.instruction_type == 'L') {
-
+        parseRGBCommand(curr_data.command_start, curr_data.command_end);
         Serial.print("L");
     }
     else if (curr_data.instruction_type == 'P') {
@@ -534,7 +534,8 @@ void parseRGBCommand(char* command_start, char* command_end) {
   for (char* ptr = command_start; ptr < command_end; ++ptr) {
     if (*ptr >= '0' && *ptr <= '9') {
       num = num * 10 + (*ptr - '0');
-    } else if (*ptr == '-' || ptr == command_end - 1) {
+    } 
+    else if (*ptr == ',' || ptr == command_end - 1) {
       if (ptr == command_end - 1 && *ptr >= '0' && *ptr <= '9') {
         num = num * 10 + (*ptr - '0');
       }
@@ -550,7 +551,8 @@ void parseRGBCommand(char* command_start, char* command_end) {
     targetGreen = values[1];
     targetBlue = values[2];
     fadeToTargetColor();
-  } else {
+  } 
+  else {
     Serial.println("Invalid command format");
   }
 }
