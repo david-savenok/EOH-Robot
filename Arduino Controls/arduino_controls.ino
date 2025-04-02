@@ -482,7 +482,7 @@ bool handleInstructionSet(char** instruction_set) {
         Serial.print("C");
     }
     else if (curr_data.instruction_type == 'L') {
-        parseRGBCommand(curr_data.command_start, curr_data.command_end);
+        handleLEDCommand(curr_data.command_start, curr_data.command_end);
         Serial.print("L");
     }
     else if (curr_data.instruction_type == 'P') {
@@ -526,7 +526,7 @@ Instruction parseInstructionSet(char** instruction_set) {
   return result;
 }
 
-void parseRGBCommand(char* command_start, char* command_end) {
+void handleLEDCommand(char* command_start, char* command_end) {
   int values[3] = {0};
   int index = 0;
   int num = 0;
@@ -611,10 +611,6 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
     }
     in_token = false;
     return result;
-}
-
-LEDCommand handleLEDCommand(char* command_start, char* command_end){
-
 }
 
 EndCommand handleEndCommand(char* command_start, char* command_end){
@@ -956,9 +952,9 @@ void fadeToTargetColor() {
     analogWrite(GREEN, greenValue);
     analogWrite(BLUE, blueValue);
 
-    Serial.print("Red: "); Serial.println(redValue);
-    Serial.print("Green: "); Serial.println(greenValue);
-    Serial.print("Blue: "); Serial.println(blueValue);
+    //Serial.print("Red: "); Serial.println(redValue);
+    //Serial.print("Green: "); Serial.println(greenValue);
+    //Serial.print("Blue: "); Serial.println(blueValue);
   
   }
 }
