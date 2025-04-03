@@ -138,6 +138,14 @@ void setup() {
   pinMode(encPin2, INPUT);
   pinMode(encPin3, INPUT);
   pinMode(encPin4, INPUT);
+  pinMode(34, OUTPUT);
+  pinMode(35, OUTPUT);
+  pinMode(36, OUTPUT);
+  pinMode(37, OUTPUT);
+  digitalWrite(34, HIGH);
+  digitalWrite(35, HIGH);
+  digitalWrite(36, HIGH);
+  digitalWrite(37, HIGH);
   //DC pin settings
   pinMode(encPin5, INPUT);
   pinMode(encPin6, INPUT);
@@ -311,7 +319,7 @@ void loop() {
     checkSteppers = false;
   }
   if (timePassed >= loopTime) {
-    updateDCs();
+    //updateDCs();
     //print_motor_info(); //For debugging
   }
 }
@@ -386,7 +394,7 @@ void correctSteppers(){
     }
   }
 
-  frequencies[mostStepsIndex] = 1000;
+  frequencies[mostStepsIndex] = 500;
   timescale = mostSteps/frequencies[mostStepsIndex];
 
   if (timescale != 0){
@@ -394,7 +402,7 @@ void correctSteppers(){
       if (i != mostStepsIndex){
         if (steps[i] != 0){
           frequencies[i] = steps[i]/timescale;
-        } else frequencies[i] = 1000;
+        } else frequencies[i] = 500;
       }
     }
     noInterrupts();
@@ -644,25 +652,25 @@ float readEncoderStepper(float* currentPos, int analogPin, float guess){
   float checkVal;
   switch (analogPin) {
       case A1:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[0]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/20.0) - encZeroes[0]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0); //MAKE SURE THAT currentPos AND guess are both between 0 and 18 when checking them, BUT THEY MUST RETURN TO THEIR ACTUAL VALUE AFTER THIS
         if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess; //compare TEMP to guess and then edit current pos
         break;
       case A2:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/50.0) - encZeroes[1]; //
         if (*currentPos < 0) *currentPos += 7.2;
         checkVal = (abs(*currentPos - guess)*50.0);
         if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
         break;
       case A3:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[2]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/20.0) - encZeroes[2]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0);
         if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
         break;
       case A4:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[3]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/20.0) - encZeroes[3]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0);
         if (checkVal < 1.8 || checkVal > 358.2) *currentPos = guess;
@@ -681,13 +689,13 @@ float readEncoderDC(float &num1, float &num2, float guess1, float guess2){
   float checkVal1;
   float checkVal2;
   int raw_value = analogRead(encPin5);
-  num1 = (raw_value/1023.0)*(5/3.3)*(360.0);
+  num1 = (raw_value/1023.0)*(360.0);
   if (guess1 < 0) guess1 += 360;
   checkVal1 = abs(num1 - guess1);
   if (checkVal1 < 1.8 || checkVal1 > 358.2) num1 = guess1;
   if (num1 == 0.0) num1+=0.01;
   int raw_value2 = analogRead(encPin6);
-  num2 = (raw_value2/1023.0)*(5/3.3)*(360.0);
+  num2 = (raw_value2/1023.0)*(360.0);
   if (guess2 < 0) guess2 += 360;
   checkVal2 = abs(num2 - guess2);
   if (checkVal2 < 1.8 || checkVal2 > 358.2) num2 = guess2;

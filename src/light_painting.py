@@ -47,28 +47,40 @@ def generate_contours(image):
 
     min_contour_area = 100  # Adjust this value
     filtered_contours = [cnt for cnt in simplified_contours if cv2.contourArea(cnt) > min_contour_area]
-
+    
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    mask = np.zeros_like(gray, dtype=np.uint8)    
+    cv2.drawContours(mask, contours, -1, (255), thickness=10)  # Increase thickness if needed
+    mask = cv2.dilate(mask, np.ones((5,5), np.uint8), iterations=2)
+    for contour in contours:
+        cv2.drawContours(mask, [contour], -1, (0), thickness=cv2.FILLED)
+    inpainted = cv2.inpaint(image, mask, inpaintRadius=3, flags=cv2.INPAINT_TELEA)
     colors = []
     #print(filtered_contours, type(filtered_contours))
     for contour in filtered_contours:
         contour_colors = []
+        red = 0
+        green = 0
+        blue = 0
         for point in contour:
             point = point[0]#Points seem to be double wrapped for some reason
-            #print(point)
-            numbers = image[point[1], point[0]]
-            #print(numbers)
+            numbers = inpainted[point[1], point[0]].astype(np.int32)
+            red = red + numbers[0]
+            green += numbers[1]
+            blue += numbers[2]
             contour_colors.append(numbers)
+        
+        colors.append([int(red/len(contour)), int(green/len(contour)), int(blue/len(contour))])
 
-        colors.append(contour_colors)
-    print(colors)
-    #image_with_contours = src.copy()
+    image_with_contours = src.copy()
 
-    #cv2.imshow("Source", src)
-    #cv2.drawContours(image_with_contours, filtered_contours, -1, (0, 255, 0), 2) 
-    #cv2.imshow("Original Image with Contours", image_with_contours)
-    #cv2.imshow("Canny edges", edges)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.imshow("Source", image)
+    cv2.drawContours(image_with_contours, filtered_contours, -1, (0, 255, 0), 2) 
+    cv2.imshow("Original Image with Contours", image_with_contours)
+    cv2.imshow("Inpainted", inpainted)
+    cv2.imshow("Inpainting Mask", mask)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     
     return filtered_contours, colors
 
@@ -163,6 +175,7 @@ for i in true_list_set:
 def create_command(theta_list_set):
     command = "/S*H*"
     contour_commands = []
+    light_colors = []
     theta_firsts = [contour[0] for contour in theta_list_set]
     theta_lasts = [contour[-1] for contour in theta_list_set]
     for contour in theta_list_set:
@@ -173,12 +186,21 @@ def create_command(theta_list_set):
                 contour_command += ","
         contour_commands.append(contour_command[:-1])
     
+    for color in contour_colors:
+        light_color = ""
+        for value in color:
+            light_color += str(value)
+            light_color += ","
+        light_colors.append(light_color[:-1])
+
     for i in range(len(contour_commands)):
         contour_command = contour_commands[i]
-        command += "/M*"
+        command += "/L*"
+        command += light_colors[i]
+        command += "*/M*"
         command += contour_command
         if i < len(theta_firsts)-1:
-            command += "*/L*0*/M*"
+            command += "*/L*0,0,0*/M*"
             for theta in theta_lasts[i]:
                 command += str(round(theta, 2))
                 command += ","
@@ -186,7 +208,6 @@ def create_command(theta_list_set):
                 command += str(round(theta, 2))
                 command += ","
             command = command[:-1]
-            command += "*/L*1*"
         else:
             command += "*/M*0,0,0,0,0,0"
             command += "*/E*X,"
@@ -200,5 +221,5 @@ def create_command(theta_list_set):
 def call_test():
     return create_command(theta_list_set) + '/'
 
-call_test()
-#print(call_test())
+#call_test()
+print(call_test())

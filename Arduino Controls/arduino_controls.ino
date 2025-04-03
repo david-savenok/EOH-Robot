@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <Servo.h>
+#include <Servo.h>
 #include <math.h>
 
 using namespace std;
@@ -82,7 +82,7 @@ typedef struct ClawCommand {
 //-------------------VARIABLE INSTANTIATIONS---------------------------
 float zeroOffset[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 float desiredAngles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-//Servo clawServo;
+Servo clawServo;
 float acceptable_percent_error = 0.01; //FIGURE THIS OUT EXPERIMENTALLY TUNE
 Buffer* bufA = malloc(sizeof(Buffer));
 Buffer* bufB = malloc(sizeof(Buffer));
@@ -201,9 +201,8 @@ float Ki6 = 3.8;
 
 //------------------------SETUP----------------------------------------
 void setup() {
-  //clawServo.attach(CHOOSE A PIN PLEASE);
+  clawServo.attach(3);
   Serial.begin(115200);
-  //Serial1.begin(9600);
   bufA->name = 'A';
   bufB->name = 'B';
   bufA->is_full = false;
@@ -573,10 +572,10 @@ EndCommand handleEndCommand(char* command_start, char* command_end){
 //---------------------------OTHER FUNCTIONS-------------------------------
 void actuateClaw(int command) {
     if (command == 1) {
-      //clawServo.write(CORRECT DEGREES FOR OPEN);
+      clawServo.write(220);
     }
     else {
-      //clawServo.write(CORRENT DEGREES FOR CLOSED)
+      clawServo.write(150);
     }
 }
 
@@ -838,25 +837,25 @@ float readEncoderStepper(float* currentPos, int analogPin, float guess){
   float checkVal;
   switch (analogPin) {
       case A1:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[0]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/20.0) - encZeroes[0]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0); //MAKE SURE THAT currentPos AND guess are both between 0 and 18 when checking them, BUT THEY MUST RETURN TO THEIR ACTUAL VALUE AFTER THIS
         if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess; //compare TEMP to guess and then edit current pos
         break;
       case A2:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/50.0) - encZeroes[1]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/50.0) - encZeroes[1]; //
         if (*currentPos < 0) *currentPos += 7.2;
         checkVal = (abs(*currentPos - guess)*50.0);
         if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
         break;
       case A3:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[2]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/20.0) - encZeroes[2]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0);
         if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
         break;
       case A4:
-        *currentPos = ((((analogRead(analogPin))/1023.0)*(5/3.3)*(360.0))/20.0) - encZeroes[3]; //
+        *currentPos = ((((analogRead(analogPin))/1023.0)*(360.0))/20.0) - encZeroes[3]; //
         if (*currentPos < 0) *currentPos += 18;
         checkVal = (abs(*currentPos - guess)*20.0);
         if (checkVal < 7.2 || checkVal > 352.8) *currentPos = guess;
@@ -875,13 +874,13 @@ float readEncoderDC(float &num1, float &num2, float guess1, float guess2){
   float checkVal1;
   float checkVal2;
   int raw_value = analogRead(encPin5);
-  num1 = (raw_value/1023.0)*(5/3.3)*(360.0);
+  num1 = (raw_value/1023.0)*(360.0);
   if (guess1 < 0) guess1 += 360;
   checkVal1 = abs(num1 - guess1);
   if (checkVal1 < 1.8 || checkVal1 > 358.2) num1 = guess1;
   if (num1 == 0.0) num1+=0.01;
   int raw_value2 = analogRead(encPin6);
-  num2 = (raw_value2/1023.0)*(5/3.3)*(360.0);
+  num2 = (raw_value2/1023.0)*(360.0);
   if (guess2 < 0) guess2 += 360;
   checkVal2 = abs(num2 - guess2);
   if (checkVal2 < 1.8 || checkVal2 > 358.2) num2 = guess2;
