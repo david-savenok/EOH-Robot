@@ -1,14 +1,21 @@
 #include <Servo.h>
 Servo newservo;
-void loop() {
-    for (int angle = 0; angle <= 180; angle++) {
-        newservo.write(angle);
+void ClawControl (int n) {
+    int angle = 0;
+    int pin = n;
+    void setup() {
+        newservo.attach(pin);
+    }
+    void loop() {
+        for (angle = 0; angle <= 180; angle++) {
+            newservo.write(angle);
+            delay(0);
+        }
+        for (angle = 180; angle >= 0; angle--) {
+            newservo.write(angle);
+            delay(0);
+        }
         delay(0);
     }
-    for (int angle2 = 180; angle2 >= 0; angle--) {
-        newservo.write(angle2);
-        delay(0);
-    }
-    delay(0);
 }
 
