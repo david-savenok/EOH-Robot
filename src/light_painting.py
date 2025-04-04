@@ -74,13 +74,13 @@ def generate_contours(image):
 
     image_with_contours = src.copy()
 
-    cv2.imshow("Source", image)
+    #cv2.imshow("Source", image)
     cv2.drawContours(image_with_contours, filtered_contours, -1, (0, 255, 0), 2) 
-    cv2.imshow("Original Image with Contours", image_with_contours)
-    cv2.imshow("Inpainted", inpainted)
-    cv2.imshow("Inpainting Mask", mask)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.imshow("Original Image with Contours", image_with_contours)
+    #cv2.imshow("Inpainted", inpainted)
+    #cv2.imshow("Inpainting Mask", mask)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     
     return filtered_contours, colors
 
@@ -152,7 +152,7 @@ ax.set_xlabel("x")
 ax.set_ylabel("z")
 ax.set_aspect('equal')
 ax.grid(True) 
-plt.show()
+#plt.show()
 
 #Turn these into T vectors
 theta_list_set = []
@@ -218,8 +218,8 @@ def create_command(theta_list_set):
             command += "*"
     return command
 
-def call_test():
+def call():
     return create_command(theta_list_set) + '/'
 
 #call_test()
-print(call_test())
+print(call())

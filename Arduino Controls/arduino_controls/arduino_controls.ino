@@ -479,6 +479,12 @@ bool handleInstructionSet(char** instruction_set) {
     }
     else if (curr_data.instruction_type == 'C') {
         Serial.print("C");
+        if (*(curr_data.command_start) == 'C') {
+          actuateClaw(0);
+        }
+        else if (*(curr_data.command_start) == 'O') {
+          actuateClaw(1);
+        }
     }
     else if (curr_data.instruction_type == 'L') {
         handleLEDCommand(curr_data.command_start, curr_data.command_end);
