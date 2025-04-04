@@ -30,7 +30,7 @@ using namespace std;
 
 #define RED 2 // LED pin red
 #define GREEN 4 // LED pin green
-#define BLUE 6 // LED pin blue
+#define BLUE 5 // LED pin blue
 
 //-------------------STRUCTURES----------------------------------------
 typedef struct Buffer {
@@ -479,6 +479,12 @@ bool handleInstructionSet(char** instruction_set) {
     }
     else if (curr_data.instruction_type == 'C') {
         Serial.print("C");
+        if (*(curr_data.command_start) == 'C') {
+          actuateClaw(0);
+        }
+        else if (*(curr_data.command_start) == 'O') {
+          actuateClaw(1);
+        }
     }
     else if (curr_data.instruction_type == 'L') {
         handleLEDCommand(curr_data.command_start, curr_data.command_end);
