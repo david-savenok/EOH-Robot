@@ -30,7 +30,7 @@ using namespace std;
 
 #define RED 2 // LED pin red
 #define GREEN 4 // LED pin green
-#define BLUE 6 // LED pin blue
+#define BLUE 5 // LED pin blue
 
 //-------------------STRUCTURES----------------------------------------
 typedef struct Buffer {
@@ -107,8 +107,8 @@ float motor1UB =  360.0;
 float motor2LB = -25.0;
 float motor2UB =  205.0;
 
-float motor3LB = -360.0;
-float motor3UB =  360.0;
+float motor3LB = -145.0;
+float motor3UB =  145.0;
 
 float motor4LB = -720.0;
 float motor4UB =  720.0;
@@ -144,8 +144,8 @@ int count4 = 0;
 
 float desPos1; //degrees
 float desPos2; //degrees
-float desPos3 = 0; //degrees
-float desPos4 = 0; //degrees
+float desPos3; //degrees
+float desPos4; //degrees
 
 float previousDesPos1 = 0.0;
 float previousDesPos2 = 0.0;
@@ -181,7 +181,7 @@ unsigned long prevMillis = 0; // last time (ms) the code entered update_speed()
 bool passZero5 = false;
 bool passZero6 = false;
 
-float currPos5 = 360;
+float currPos5 = 0;
 float desPos5 = 0;
 int currPWM5 = 100; // current++ PWM output
 bool motor5Running = false;
@@ -279,8 +279,8 @@ void setup() {
   TCCR1B |= (1 << CS10) | (1<< CS11);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR1A = 249; //init
-  OCR1B = 4;
+  OCR1A = 1000; //init
+  OCR1B = 499;
   // Enable Timer1 Compare Match A and B interrupts
   TIMSK1 |= (1 << OCIE1A) | (1<< OCIE1B);
   //-----------------------------------------------------------------------------------------------------
@@ -293,8 +293,8 @@ void setup() {
   TCCR3B |= (1 << CS30) | (1<< CS31);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR3A = 249; //init
-  OCR3B = 4;
+  OCR3A = 1000; //init
+  OCR3B = 499;
   // Enable Timer3 Compare Match A and B interrupts
   TIMSK3 |= (1 << OCIE3A) | (1<< OCIE3B);
   //-----------------------------------------------------------------------------------------------------
@@ -307,8 +307,8 @@ void setup() {
   TCCR4B |= (1 << CS40) | (1<<CS41);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR4A = 249; //init
-  OCR4B = 4;
+  OCR4A = 1000; //init
+  OCR4B = 499;
   // Enable Timer4 Compare Match A and B interrupts
   TIMSK4 |= (1 << OCIE4A) | (1<< OCIE4B);
   //-----------------------------------------------------------------------------------------------------
@@ -321,8 +321,8 @@ void setup() {
   TCCR5B |= (1 << CS50) | (1<< CS51);   // Prescaler = 8 (16 MHz timer frequency, 2MHz effective timer frequency)
 
   // Set OCR1A for the 500 µs HIGH pulse (1000 timer counts)
-  OCR5A = 249; //init
-  OCR5B = 4;
+  OCR5A = 1000; //init
+  OCR5B = 499;
   // Enable Timer5 Compare Match A and B interrupts
   TIMSK5 |= (1 << OCIE5A) | (1<< OCIE5B);
   //-----------------------------------------------------------------------------------------------------
