@@ -146,7 +146,7 @@ def lightPaintingIK(x,z):
     return theta2, theta3
 """
 
-image_file = r"src/testImage7.jpeg"
+image_file = r"src/testImage8.jpeg"
 max_height = 1024
 max_width = 1024
 image = cv2.imread(image_file)
@@ -177,11 +177,7 @@ for set in point_set_set_3D:
     temp=[]
     for point in set:
         theta = lightPaintingIK(point[0], point[1], np.array(last))
-        if theta[2] > 0:
-            bleh = theta[2] - 180
-        else:
-            bleh = theta[2] + 180
-        temp.append([0,-theta[0], -theta[1], 0, bleh, 0])
+        temp.append([0,theta[0], theta[1], 0, theta[2], 0])
         last = theta
     theta_list_set.append(temp)
 
@@ -257,4 +253,5 @@ def create_command(theta_list_set):
 def call():
     return create_command(theta_list_set) + '/'
 
-#call()
+print(call())
+plot_points()
