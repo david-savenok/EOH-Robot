@@ -227,7 +227,7 @@ def create_command(theta_list_set):
 
     for i in range(len(contour_commands)):
         contour_command = contour_commands[i]
-        command += "/L*"
+        command += "*/L*"
         command += light_colors[i]
         command += "*/M*"
         command += contour_command

@@ -4,7 +4,7 @@ import time
 
 # Importing action modules
 import light_painting 
-import jenga_2
+#import jenga_2
 
 # Replace with your Arduino's actual port (e.g., check in Arduino IDE)
 port = '/dev/cu.usbmodem101'  
@@ -49,13 +49,15 @@ try:
     # Wait 2 seconds for Arduino to reset after connection
     time.sleep(2)
 
-    data = ...
-    print('Type \"light\" for light painting and \"jenga\" for jenga')
-    user_choice = input()
-    if user_choice == 'light':
-        data = light_painting.call()
-    elif user_choice == 'jenga':
-        data = jenga_2.call()
+    #data = ...
+    #print('Type \"light\" for light painting and \"jenga\" for jenga')
+    #user_choice = input()
+    #if user_choice == 'light':
+    
+    data = light_painting.call()
+    print(data)
+    #elif user_choice == 'jenga':
+    #    data = jenga_2.call()
         #print(data)
         
     #print(bytes(light_painting.call_test(), "utf-8"))
