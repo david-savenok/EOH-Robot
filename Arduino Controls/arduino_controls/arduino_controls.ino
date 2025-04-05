@@ -25,7 +25,7 @@ using namespace std;
 #define encPin2 A2
 #define encPin3 A3
 #define encPin4 A4
-#define encPin5 A5
+#define encPin5 A15
 #define encPin6 A6
 
 #define RED 12 // LED pin red
@@ -172,7 +172,6 @@ float encZeroes[4] = {0.0, 0.0, 0.0, 0.0};
 
 //DC Globals
 
-const float loopTime = 1; // every X ms, the code enters update_speed()
 int timePassed = 0;
 unsigned long prevMillis = 0; // last time (ms) the code entered update_speed()
 
@@ -471,10 +470,7 @@ bool handleInstructionSet(char** instruction_set) {
             count4 = 0;
           }
           
-          if (timePassed >= loopTime) {
-            updateDCs();
-            //print_motor_info(); //For debugging
-          }
+          updateDCs();
           
         }
           //make sure to set desiredAngles after you move in case the next command is not a move command
@@ -537,7 +533,7 @@ void handleLEDCommand(char* command_start, char* command_end) {
   int values[3] = {0};
   int index = 0;
   int num = 0;
-  
+  Serial.println(command_start);
   for (char* ptr = command_start; ptr < command_end; ++ptr) {
     if (*ptr >= '0' && *ptr <= '9') {
       num = num * 10 + (*ptr - '0');
@@ -555,8 +551,15 @@ void handleLEDCommand(char* command_start, char* command_end) {
   
   if (index == 3) {
     targetRed = values[0];
+    Serial.print(targetRed);
+    Serial.print(" ");
     targetGreen = values[1];
+    Serial.print(targetGreen);
+    Serial.print(" ");
     targetBlue = values[2];
+    Serial.print(targetBlue);
+    Serial.print(" ");
+
     fadeToTargetColor();
   } 
   else {
@@ -942,6 +945,10 @@ float readEncoderDC(float &num1, float &num2, float guess1, float guess2){
 }
 
 void fadeToTargetColor() {
+  analogWrite(RED, targetRed);
+  analogWrite(GREEN, targetGreen);
+  analogWrite(BLUE, targetBlue);
+  /*
   while (redValue != targetRed || greenValue != targetGreen || blueValue != targetBlue) {
     if (redValue != targetRed) {
       redValue += (targetRed > redValue) ? 1 : -1;
@@ -955,13 +962,14 @@ void fadeToTargetColor() {
       blueValue += (targetBlue > blueValue) ? 1 : -1;
     }
 
-    analogWrite(RED, redValue);
-    analogWrite(GREEN, greenValue);
-    analogWrite(BLUE, blueValue);
+    analogWrite(RED, targetRed);
+    analogWrite(GREEN, targetGreen);
+    analogWrite(BLUE, targetBlue);
 
     //Serial.print("Red: "); Serial.println(redValue);
     //Serial.print("Green: "); Serial.println(greenValue);
     //Serial.print("Blue: "); Serial.println(blueValue);
   
-  }
+  }\
+  */
 }
