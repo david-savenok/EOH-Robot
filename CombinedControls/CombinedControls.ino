@@ -17,7 +17,7 @@
 #define encPin2 A2
 #define encPin3 A3
 #define encPin4 A4
-#define encPin5 A5
+#define encPin5 A15
 #define encPin6 A6
 
 //Joint limits
@@ -25,8 +25,8 @@
 float motor1LB = -360.0; //units of degrees
 float motor1UB =  360.0;
 
-float motor2LB = -25.0;
-float motor2UB =  205.0;
+float motor2LB = -205.0;
+float motor2UB =  45.0;
 
 float motor3LB = -145.0;
 float motor3UB =  145.0;
@@ -41,8 +41,6 @@ float motor6LB = -360.0/360.0;
 float motor6UB =  360.0/360.0;
 
 //Stepper globals
-
-bool checkSteppers = false;
 bool steppersOff = true; 
 bool motor1Running = false;  // State to track HIGH/LOW for step pulse
 bool motor2Running = false;
@@ -95,7 +93,7 @@ float encZeroes[4] = {0.0, 0.0, 0.0, 0.0};
 
 //DC Globals
 
-const float loopTime = 10; // every X ms, the code enters update_speed()
+const float loopTime = 1; // every X ms, the code enters update_speed()
 int timePassed = 0;
 unsigned long prevMillis = 0; // last time (ms) the code entered update_speed()
 
@@ -121,7 +119,7 @@ float error6 = 0;
 int rot5 = 0;
 int rot6 = 0;
 
-float Ki5 = 25;
+float Ki5 = 10;
 float Ki6 = 3.8;
 
 void setup() {
@@ -297,7 +295,7 @@ void loop() {
   timePassed = millis() - timePassed;
   if (Serial.available() > 0) {
     parseString();
-    if (steppersOff && !checkSteppers) { 
+    if (steppersOff) { 
       runSteppers(); //SHOULD TAKE DESPOS1-4, AND SHOULD NOT BE GLOBAL VARIABLES || ALSO ADD A FLAG TO SIGNAL WHEN THIS IS COMPLETE AND CORRECT STEPPERS NEEDS TO RUN
     }
   }if(count1 >= steps[0]){
@@ -313,15 +311,7 @@ void loop() {
     motor4Running = false;
     count4 = 0;
   }
-  if (steppersOff && checkSteppers) {
-    //Serial.println(steps[0]);
-    //correctSteppers();
-    checkSteppers = false;
-  }
-  if (timePassed >= loopTime) {
-    //updateDCs();
-    //print_motor_info(); //For debugging
-  }
+  updateDCs();
 }
 
 void parseString(){
@@ -359,66 +349,6 @@ void parseString(){
     desPos6 = (command.substring(commaLoc5+1, commaLoc6)).toFloat();
     commaLoc6 = command.indexOf(',', commaLoc5+1);
   }
-}
-
-void correctSteppers(){
-  Serial.println("called");
-  readEncoderStepper(&curPos1, A1, fmod(desPos1*20.0, 360.0));
-  theta1 = desPos1 - (((rot1*360.0)/20.0) + curPos1); //find relative angle to move
-  theta2 = 0;//desPos2 - (((rot2*360.0)/50.0) + readEncoderStepper(&curPos2, A2)); //DOUBLE CHECK FOR FMOD
-  theta3 = 0;//desPos3 - (((rot3*360.0)/20.0) + readEncoderStepper(&curPos3, A3));
-  theta4 = 0;//desPos4 - (((rot4*360.0)/20.0) + readEncoderStepper(&curPos4, A4));
-  if (abs(theta1) > 1.8) {
-    digitalWrite(DIR_PIN1, (theta1 >= 0) ? HIGH : LOW);
-    steps[0] = short((abs(theta1)*20.0)/1.8);   
-  } else steps[0] = 0;
-  if (abs(theta2) > 1.8) {
-    digitalWrite(DIR_PIN2, (theta2 >= 0) ? HIGH : LOW);
-    steps[1] = short((abs(theta2)*20.0)/1.8);   
-  } else steps[1] = 0;
-  if (abs(theta3) > 1.8) {
-    digitalWrite(DIR_PIN3, (theta3 >= 0) ? HIGH : LOW);
-    steps[2] = short((abs(theta3)*20.0)/1.8);   
-  } else steps[2] = 0;
-  if (abs(theta4) > 1.8) {
-    digitalWrite(DIR_PIN4, (theta4 >= 0) ? HIGH : LOW);
-    steps[3] = short((abs(theta4)*20.0)/1.8);   
-  } else steps[3] = 0;
-
-  mostSteps = steps[0];
-  mostStepsIndex = 0;
-  for (int i=1; i<4; i++){
-    if (steps[i] > mostSteps){
-      mostSteps = steps[i];
-      mostStepsIndex = i;
-    }
-  }
-
-  frequencies[mostStepsIndex] = 500;
-  timescale = mostSteps/frequencies[mostStepsIndex];
-
-  if (timescale != 0){
-    for (int i = 0; i<4; i++){
-      if (i != mostStepsIndex){
-        if (steps[i] != 0){
-          frequencies[i] = steps[i]/timescale;
-        } else frequencies[i] = 500;
-      }
-    }
-    noInterrupts();
-    OCR1A = calcOCRA(frequencies[0], 32);
-    OCR3A = calcOCRA(frequencies[1], 32);
-    OCR4A = calcOCRA(frequencies[2], 32); 
-    OCR5A = calcOCRA(frequencies[3], 32);
-    interrupts();
-    if (steps[0] > 0) motor1Running = true;
-    if (steps[1] > 0) motor2Running = true;
-    if (steps[2] > 0) motor3Running = true;
-    if (steps[3] > 0) motor4Running = true;
-  }
-  Serial.println("Motors moving to correction.");
-  Serial.println(steps[0]);
-  checkSteppers = false;
 }
 
 void runSteppers(){
@@ -474,7 +404,7 @@ void runSteppers(){
       theta2 += 360.0;
     }
   }
-  rot2 = floor((rot2*(360/20) + curPos2 + theta2)*(20.0/360.0)); //find the next rotation value
+  rot2 = floor((rot2*(360/50) + curPos2 + theta2)*(50.0/360.0)); //find the next rotation value
 
   if (!((rot3*(360/20) + curPos3 + theta3) < motor3UB && (rot3*(360/20) + curPos3 + theta3) > motor3LB)) { //if outside the bound change directions to the correct point 
     if (theta3 > 0){
@@ -512,7 +442,7 @@ void runSteppers(){
       mostStepsIndex = i;
     }
   }
-  frequencies[mostStepsIndex] = 1108;
+  frequencies[mostStepsIndex] = 500;
   timescale = mostSteps/frequencies[mostStepsIndex];
 
   if (timescale != 0){
@@ -520,7 +450,7 @@ void runSteppers(){
       if (i != mostStepsIndex){
         if (steps[i] != 0) {
           frequencies[i] = steps[i]/timescale;
-        } else frequencies[i] = 1000;
+        } else frequencies[i] = 500;
       } 
     }
     noInterrupts();
@@ -535,14 +465,28 @@ void runSteppers(){
     if (steps[3] > 0) motor4Running = true;
   }
   Serial.println("Motors started.");
-  checkSteppers = true;
-  //Serial.println(desPos1);
-  //Serial.println(curPos1);
-  //Serial.println(rot1);
-  //Serial.println(steps[0]);
+  
+  Serial.println("DESIRED");
+  Serial.println(desPos1);
+  Serial.println(desPos2);
+  Serial.println(desPos3);
+  Serial.println("CURRENT");
+  Serial.println(curPos1);
+  Serial.println(curPos2);
+  Serial.println(curPos3);
+  Serial.println("ROTATIONS");
+  Serial.println(rot1);
+  Serial.println(rot2);
+  Serial.println(rot3);
+  Serial.println("STEPS");
+  Serial.println(steps[0]);
+  Serial.println(steps[1]);
+  Serial.println(steps[2]);
+  
 }
 
 void updateDCs(){
+  //Serial.println("Updating DCs");
   float newPos5;
   float newPos6;
   readEncoderDC(newPos5, newPos6, desPos5, desPos6);
@@ -595,7 +539,7 @@ void updateDCs(){
   }
   
   //End conditions
-  if (abs(error5) < 5.0) {
+  if (abs(error5) < 8.0) {
     digitalWrite(IN1, 1);
     digitalWrite(IN2, 1);
     currPWM5 = 0;
@@ -615,12 +559,12 @@ void updateDCs(){
     if (currPWM5 >= 255) currPWM5 = 255;
     if (currPWM5 <= -255) currPWM5 = -255;
     if (currPWM5 <= 0) {
-      digitalWrite(IN1, 1);
-      digitalWrite(IN2, 0);
-      analogWrite(pwmPin5, abs(currPWM5));
-    } else {
       digitalWrite(IN1, 0);
       digitalWrite(IN2, 1);
+      analogWrite(pwmPin5, abs(currPWM5));
+    } else {
+      digitalWrite(IN1, 1);
+      digitalWrite(IN2, 0);
       analogWrite(pwmPin5,abs(currPWM5));
     }
   }

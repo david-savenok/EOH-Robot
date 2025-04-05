@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <Servo.h>
+//#include <Servo.h>
 #include <math.h>
 
 using namespace std;
@@ -28,9 +28,9 @@ using namespace std;
 #define encPin5 A5
 #define encPin6 A6
 
-#define RED 2 // LED pin red
-#define GREEN 4 // LED pin green
-#define BLUE 5 // LED pin blue
+#define RED 12 // LED pin red
+#define GREEN 8 // LED pin green
+#define BLUE 13 // LED pin blue
 
 //-------------------STRUCTURES----------------------------------------
 typedef struct Buffer {
@@ -86,7 +86,7 @@ typedef struct ClawCommand {
 //-------------------VARIABLE INSTANTIATIONS---------------------------
 float zeroOffset[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 float desiredAngles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-Servo clawServo;
+//Servo clawServo;
 float acceptable_percent_error = 0.01; //FIGURE THIS OUT EXPERIMENTALLY TUNE
 Buffer* bufA = malloc(sizeof(Buffer));
 Buffer* bufB = malloc(sizeof(Buffer));
@@ -104,8 +104,8 @@ bool start_parse = true;
 float motor1LB = -360.0; //units of full rotations
 float motor1UB =  360.0;
 
-float motor2LB = -25.0;
-float motor2UB =  205.0;
+float motor2LB = -205.0;
+float motor2UB =  45.0;
 
 float motor3LB = -145.0;
 float motor3UB =  145.0;
@@ -120,8 +120,6 @@ float motor6LB = -720.0/360.0;
 float motor6UB =  720.0/360.0;
 
 //Stepper globals
-
-bool checkSteppers = false;
 bool steppersOff = true; 
 bool motor1Running = false;  // State to track HIGH/LOW for step pulse
 bool motor2Running = false;
@@ -174,7 +172,7 @@ float encZeroes[4] = {0.0, 0.0, 0.0, 0.0};
 
 //DC Globals
 
-const float loopTime = 10; // every X ms, the code enters update_speed()
+const float loopTime = 1; // every X ms, the code enters update_speed()
 int timePassed = 0;
 unsigned long prevMillis = 0; // last time (ms) the code entered update_speed()
 
@@ -200,7 +198,7 @@ float error6 = 0;
 int rot5 = 0;
 int rot6 = 0;
 
-float Ki5 = 25;
+float Ki5 = 10;
 float Ki6 = 3.8;
 
 int redValue = 0;
@@ -213,7 +211,7 @@ int targetBlue = 0;
 
 //------------------------SETUP----------------------------------------
 void setup() {
-  clawServo.attach(3);
+  //clawServo.attach(3);
   Serial.begin(115200);
   bufA->name = 'A';
   bufB->name = 'B';
@@ -242,6 +240,14 @@ void setup() {
   pinMode(encPin2, INPUT);
   pinMode(encPin3, INPUT);
   pinMode(encPin4, INPUT);
+  pinMode(34, OUTPUT);
+  pinMode(35, OUTPUT);
+  pinMode(36, OUTPUT);
+  pinMode(37, OUTPUT);
+  digitalWrite(34, HIGH);
+  digitalWrite(35, HIGH);
+  digitalWrite(36, HIGH);
+  digitalWrite(37, HIGH);
   //DC pin settings
   pinMode(encPin5, INPUT);
   pinMode(encPin6, INPUT);
@@ -251,7 +257,7 @@ void setup() {
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
-
+  readEncoderDC(currPos5, currPos6, desPos5, desPos6);
   // Set the initial direction (rotate in one direction)
   digitalWrite(DIR_PIN1, LOW);  // Set stepper direction pin (can be HIGH or LOW)
   digitalWrite(DIR_PIN2, LOW);
@@ -392,14 +398,14 @@ void loop() {
     Serial.println("A");
     start_comms = false;
   }
-  if (bufA->is_full && steppersOff && !checkSteppers) {
+  if (bufA->is_full && steppersOff) {
     bool success = handleInstructionSet(&(bufA->buf));
     if (success) {
       bufA->is_full = false;
       Serial.println("A");
     }      
   }
-  if (bufB->is_full && steppersOff && !checkSteppers) {
+  if (bufB->is_full && steppersOff) {
     bool success = handleInstructionSet(&(bufB->buf));
     if (success) {
       bufB->is_full = false;
@@ -463,10 +469,6 @@ bool handleInstructionSet(char** instruction_set) {
           if (count4 >= steps[3]){
             motor4Running = false;
             count4 = 0;
-          }
-          
-          if (steppersOff && checkSteppers) {
-            checkSteppers = false;
           }
           
           if (timePassed >= loopTime) {
@@ -583,7 +585,7 @@ MoveCommand handleMoveCommand(char* command_start, char* command_end) {
 
     // Continue parsing until no more tokens are found
     while (token != NULL && token != command_end) {
-      
+      delay(200);
       // Convert the token to a float
       float num = atof(token);
       group[groupIndex] = num;
@@ -624,10 +626,10 @@ EndCommand handleEndCommand(char* command_start, char* command_end){
 //---------------------------OTHER FUNCTIONS-------------------------------
 void actuateClaw(int command) {
     if (command == 1) {
-      clawServo.write(220);
+      //clawServo.write(220);
     }
     else {
-      clawServo.write(150);
+      //clawServo.write(150);
     }
 }
 
@@ -715,7 +717,7 @@ void runSteppers(){
       theta2 += 360.0;
     }
   }
-  rot2 = floor((rot2*(360/20) + curPos2 + theta2)*(20.0/360.0)); //find the next rotation value
+  rot2 = floor((rot2*(360/50) + curPos2 + theta2)*(50.0/360.0)); //find the next rotation value
 
   if (!((rot3*(360/20) + curPos3 + theta3) < motor3UB && (rot3*(360/20) + curPos3 + theta3) > motor3LB)) { //if outside the bound change directions to the correct point 
     if (theta3 > 0){
@@ -851,12 +853,12 @@ void updateDCs(){
     if (currPWM5 >= 255) currPWM5 = 255;
     if (currPWM5 <= -255) currPWM5 = -255;
     if (currPWM5 <= 0) {
-      digitalWrite(IN1, 1);
-      digitalWrite(IN2, 0);
-      analogWrite(pwmPin5, abs(currPWM5));
-    } else {
       digitalWrite(IN1, 0);
       digitalWrite(IN2, 1);
+      analogWrite(pwmPin5, abs(currPWM5));
+    } else {
+      digitalWrite(IN1, 1);
+      digitalWrite(IN2, 0);
       analogWrite(pwmPin5,abs(currPWM5));
     }
   }

@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import config
 from scipy.optimize import least_squares
 
-
 h, L1, offset1, L2, offset2, L3, offset3, L4, offset4, L5, offset5, L6 = config.LENGTHS
 home_position = config.ANGLES
 
@@ -42,6 +41,7 @@ def generate_contours(image):
     simplified_contours = []
     for contour in contours:
         epsilon = 0.003*cv2.arcLength(contour, True)
+        #ARMAGEDDON CODE epsilon = 0.001*cv2.arcLength(contour, True)
         approx_contour = cv2.approxPolyDP(contour, epsilon, True)
         simplified_contours.append(approx_contour)
 
@@ -56,7 +56,6 @@ def generate_contours(image):
         cv2.drawContours(mask, [contour], -1, (0), thickness=cv2.FILLED)
     inpainted = cv2.inpaint(image, mask, inpaintRadius=3, flags=cv2.INPAINT_TELEA)
     colors = []
-    #print(filtered_contours, type(filtered_contours))
     for contour in filtered_contours:
         contour_colors = []
         red = 0
@@ -74,13 +73,13 @@ def generate_contours(image):
 
     image_with_contours = src.copy()
 
-    #cv2.imshow("Source", image)
+    cv2.imshow("Source", image)
     cv2.drawContours(image_with_contours, filtered_contours, -1, (0, 255, 0), 2) 
-    #cv2.imshow("Original Image with Contours", image_with_contours)
-    #cv2.imshow("Inpainted", inpainted)
+    cv2.imshow("Original Image with Contours", image_with_contours)
+    cv2.imshow("Inpainted", inpainted)
     #cv2.imshow("Inpainting Mask", mask)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     
     return filtered_contours, colors
 
@@ -109,30 +108,45 @@ def i2space(image_point, image):
     dims = image.shape
     ix = image_point[0]
     iy = image_point[1]
-    real_height = 10
-    real_width = 10
+    real_height = 4
+    real_width = 4
     if dims[0] >= dims[1]:
-        x = real_width*(ix/dims[0]) + (L1+6)*(dims[1]/dims[0])
-        z = -real_height*(iy/dims[0]) + h + 12
+        x = real_width*(ix/dims[0]) + (L1 + 7)*(dims[1]/dims[0])
+        z = -real_height*(iy/dims[0]) + h + 2
     else:
-        x = real_width*(ix/dims[1]) + L1+6
-        z = -real_height*(iy/dims[1]) + (h + 9)*(dims[0]/dims[1])
+        x = real_width*(ix/dims[1]) + L1+10
+        z = -real_height*(iy/dims[1]) + (h + 4)*(dims[0]/dims[1])
     return [float(x), float(z)]
 
-def lightPaintingIK(x,z, guess, weight_theta2=0.000):
-    bounds = [(-41*np.pi/36,5*np.pi/36,), (-np.pi, np.pi), (-np.pi, np.pi)]
+def lightPaintingIK(x,z, guess):
+    bounds = [(-np.pi/6,np.pi/2), (-3*np.pi/4, 3*np.pi/4), (-np.pi, np.pi)]
     def func(thetas):
         theta2, theta3, theta4 = thetas
-        x_guess = L1+(L2*np.cos(-theta2))+L3*(np.cos(-theta2+theta3))+(L5+offset4)*(np.cos(-theta2+theta3-theta4))
-        z_guess = h+L2*np.sin(-theta2)+L3*np.sin(-theta2+theta3)+(L5+offset4)*np.sin(-theta2+theta3-theta4)
+        x_guess = L1+(L2*np.cos(theta2))+L3*(np.cos(theta2-theta3))+2.5*(np.cos(theta2-theta3+theta4))
+        z_guess = h+L2*np.sin(theta2)+L3*np.sin(theta2-theta3)+2.5*np.sin(theta2-theta3+theta4)
         return np.array([x_guess - x, z_guess - z, 0])
     def residual(thetas):
         return func(thetas)
     result = least_squares(residual, guess, bounds=np.array(bounds).T)
     return result.x
 
+"""
+ARMAGEDDON CODE
+def lightPaintingIK(x,z):
+    D = (x**2 + z**2 - L2**2 - L3**2) / (2 * L2 * L3)
 
-image_file = r"src/testImage4.jpeg"
+    if abs(D) > 1:
+        raise ValueError("Target is out of reach")
+
+    theta3 = -np.arccos(D)  # elbow-down
+    k1 = L1 + L2 * np.cos(theta3)
+    k2 = L2 * np.sin(theta3)
+
+    theta2 = np.arctan2(z, x) - np.arctan2(k2, k1)
+    return theta2, theta3
+"""
+
+image_file = r"src/testImage7.jpeg"
 max_height = 1024
 max_width = 1024
 image = cv2.imread(image_file)
@@ -147,25 +161,47 @@ fig, ax = plt.subplots(figsize=(8, 6))
 for set in point_set_set_3D:
     set = np.array(set)
     ax.plot(set[:, 0], set[:, 1])
-ax.set_title("Penis Drawing")
+ax.set_title("Drawing")
 ax.set_xlabel("x")
 ax.set_ylabel("z")
 ax.set_aspect('equal')
 ax.grid(True) 
-#plt.show()
+plt.show()
 
 #Turn these into T vectors
 theta_list_set = []
 true_list_set = []
 results = []
-last = [-np.pi/2,-np.pi/2,np.pi/2]
+last = [np.pi/4,0,0]
 for set in point_set_set_3D:
     temp=[]
     for point in set:
         theta = lightPaintingIK(point[0], point[1], np.array(last))
-        temp.append([0,theta[0], theta[1], theta[2], 0, 0])
+        if theta[2] > 0:
+            bleh = theta[2] - 180
+        else:
+            bleh = theta[2] + 180
+        temp.append([0,-theta[0], -theta[1], 0, bleh, 0])
         last = theta
     theta_list_set.append(temp)
+
+#Checking the actual angles please
+def plot_points():
+    theta2_new = []
+    theta3_new = []
+    theta4_new = []
+    x_new = []
+    z_new = []
+    for i in theta_list_set:
+        for thetas_list in i:
+            theta2_new.append(thetas_list[1])
+            theta3_new.append(thetas_list[2])
+            theta4_new.append(thetas_list[4])
+    for i in range(len(theta2_new)):
+        x_new.append(L1+(L2*np.cos(theta2_new[i]))+L3*(np.cos(theta2_new[i]-theta3_new[i]))+2.5*(np.cos(theta2_new[i]-theta3_new[i]+theta4_new[i])))
+        z_new.append(h+L2*np.sin(theta2_new[i])+L3*np.sin(theta2_new[i]-theta3_new[i])+2.5*np.sin(theta2_new[i]-theta3_new[i]+theta4_new[i]))
+    plt.plot(x_new, z_new, color='blue', alpha=1.0)
+    plt.show()
 
 IKerrors = 0
 for i in true_list_set:
@@ -221,5 +257,4 @@ def create_command(theta_list_set):
 def call():
     return create_command(theta_list_set) + '/'
 
-#call_test()
-print(call())
+#call()
